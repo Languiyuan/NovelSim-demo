@@ -1,0 +1,1807 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>《文字修仙》产品需求文档 PRD v1.1</title>
+<style>
+  :root {
+    --bg: #0e1019;
+    --surface: #161923;
+    --card: #1c1f2e;
+    --border: #2a2e3f;
+    --text: #d8dae5;
+    --dim: #7c809a;
+    --accent: #7b6cf6;
+    --accent2: #5b9cf5;
+    --green: #4ecb8d;
+    --orange: #f0a050;
+    --red: #ef5b5b;
+    --cyan: #56d4c8;
+    --pink: #e879a8;
+    --tag-bg: #222639;
+    --radius: 10px;
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    font-family: -apple-system, "PingFang SC", "Noto Sans SC", "Helvetica Neue", sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    line-height: 1.75;
+    font-size: 15px;
+  }
+
+  /* ---------- layout ---------- */
+  .page { max-width: 1020px; margin: 0 auto; padding: 48px 24px 80px; }
+
+  /* ---------- cover ---------- */
+  .cover {
+    text-align: center;
+    padding: 64px 0 48px;
+    border-bottom: 1px solid var(--border);
+    margin-bottom: 48px;
+  }
+  .cover-title {
+    font-size: 36px;
+    font-weight: 800;
+    background: linear-gradient(135deg, var(--accent), var(--accent2), var(--cyan));
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    margin-bottom: 12px;
+    letter-spacing: 2px;
+  }
+  .cover-sub { color: var(--dim); font-size: 14px; }
+  .cover-meta {
+    display: flex; justify-content: center; gap: 32px;
+    margin-top: 24px; font-size: 13px; color: var(--dim);
+  }
+  .cover-meta span { display: flex; align-items: center; gap: 6px; }
+
+  /* ---------- headings ---------- */
+  h1 {
+    font-size: 24px; font-weight: 700;
+    margin: 56px 0 24px;
+    padding-bottom: 10px;
+    border-bottom: 2px solid var(--accent);
+    color: var(--accent);
+  }
+  h2 {
+    font-size: 19px; font-weight: 600;
+    margin: 36px 0 16px;
+    color: var(--accent2);
+    display: flex; align-items: center; gap: 8px;
+  }
+  h3 {
+    font-size: 16px; font-weight: 600;
+    margin: 24px 0 10px;
+    color: var(--text);
+  }
+  h4 {
+    font-size: 14px; font-weight: 600;
+    margin: 16px 0 8px;
+    color: var(--dim);
+  }
+  p { margin: 8px 0; }
+  ul, ol { margin: 8px 0 8px 20px; }
+  li { margin: 4px 0; }
+
+  /* ---------- card ---------- */
+  .card {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 24px;
+    margin: 16px 0;
+  }
+
+  /* ---------- tag ---------- */
+  .tag {
+    display: inline-block;
+    padding: 2px 8px;
+    border-radius: 4px;
+    font-size: 11px;
+    font-weight: 700;
+    font-family: "SF Mono", "Fira Code", monospace;
+  }
+  .tag-get    { background: rgba(78,203,141,0.12);  color: var(--green); }
+  .tag-post   { background: rgba(91,156,245,0.12);  color: var(--accent2); }
+  .tag-put    { background: rgba(240,160,80,0.12);  color: var(--orange); }
+  .tag-delete { background: rgba(239,91,91,0.12);   color: var(--red); }
+  .tag-sse    { background: rgba(86,212,200,0.12);  color: var(--cyan); }
+
+  .tag-core { background: rgba(123,108,246,0.12); color: var(--accent); }
+  .tag-ext  { background: rgba(240,160,80,0.12);  color: var(--orange); }
+  .tag-defer{ background: rgba(239,91,91,0.10);   color: var(--red); }
+
+  /* ---------- table ---------- */
+  .tb {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 13.5px;
+    margin: 12px 0;
+  }
+  .tb th {
+    background: var(--tag-bg);
+    padding: 8px 14px;
+    text-align: left;
+    font-weight: 600;
+    color: var(--dim);
+    font-size: 12px;
+    text-transform: uppercase;
+    letter-spacing: .5px;
+    white-space: nowrap;
+  }
+  .tb td {
+    padding: 9px 14px;
+    border-bottom: 1px solid var(--border);
+    vertical-align: top;
+  }
+  .tb tr:last-child td { border-bottom: none; }
+  .tb tr:hover td { background: rgba(123,108,246,0.04); }
+  .path { font-family: "SF Mono","Fira Code",monospace; color: var(--accent2); font-size: 12.5px; }
+
+  /* ---------- note / warning ---------- */
+  .note {
+    padding: 12px 16px;
+    border-radius: 0 var(--radius) var(--radius) 0;
+    margin: 12px 0;
+    font-size: 13.5px;
+  }
+  .note-info  { background: rgba(91,156,245,0.08); border-left: 3px solid var(--accent2); color: var(--accent2); }
+  .note-warn  { background: rgba(240,160,80,0.08); border-left: 3px solid var(--orange);  color: var(--orange); }
+  .note-ok    { background: rgba(78,203,141,0.08); border-left: 3px solid var(--green);   color: var(--green); }
+
+  /* ---------- code block ---------- */
+  pre {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 16px;
+    font-size: 13px;
+    font-family: "SF Mono","Fira Code",monospace;
+    overflow-x: auto;
+    margin: 12px 0;
+    line-height: 1.6;
+    color: #c8cce0;
+  }
+  code {
+    font-family: "SF Mono","Fira Code",monospace;
+    font-size: 12.5px;
+    background: var(--tag-bg);
+    padding: 2px 6px;
+    border-radius: 4px;
+    color: var(--accent2);
+  }
+
+  /* ---------- decision table ---------- */
+  .decision-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+    margin: 16px 0;
+  }
+  .decision-item {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 14px 16px;
+  }
+  .decision-item .label { font-size: 12px; color: var(--dim); margin-bottom: 4px; }
+  .decision-item .value { font-weight: 600; font-size: 14px; }
+
+  /* ---------- flow ---------- */
+  .flow {
+    display: flex; flex-wrap: wrap; gap: 6px; align-items: center;
+    margin: 12px 0; font-size: 13px;
+  }
+  .flow-step {
+    background: var(--tag-bg);
+    padding: 5px 14px;
+    border-radius: 6px;
+    border: 1px solid var(--border);
+  }
+  .flow-step.hl { background: rgba(123,108,246,0.12); border-color: var(--accent); color: var(--accent); font-weight: 600; }
+  .flow-arrow { color: var(--dim); font-size: 11px; }
+
+  /* ---------- step card ---------- */
+  .step {
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    margin: 16px 0;
+    overflow: hidden;
+  }
+  .step-head {
+    padding: 14px 20px;
+    background: var(--tag-bg);
+    display: flex; align-items: center; gap: 12px;
+  }
+  .step-num {
+    width: 30px; height: 30px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, var(--accent), var(--accent2));
+    color: #fff;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 13px; font-weight: 800;
+    flex-shrink: 0;
+  }
+  .step-title { font-weight: 600; font-size: 15px; }
+  .step-body { padding: 20px; }
+  .step-body p.desc { color: var(--dim); font-size: 13.5px; margin-bottom: 14px; }
+
+  /* ---------- stat ---------- */
+  .stats {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(130px,1fr));
+    gap: 12px; margin: 20px 0;
+  }
+  .stat {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 18px 14px;
+    text-align: center;
+  }
+  .stat-val {
+    font-size: 30px; font-weight: 800;
+    background: linear-gradient(135deg, var(--accent), var(--accent2));
+    -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+  }
+  .stat-lbl { font-size: 12px; color: var(--dim); margin-top: 4px; }
+
+  /* ---------- module card ---------- */
+  .mod-card {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 28px;
+    margin: 20px 0;
+  }
+  .mod-head { display: flex; align-items: center; gap: 14px; margin-bottom: 18px; }
+  .mod-icon {
+    width: 44px; height: 44px;
+    border-radius: 10px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 22px; flex-shrink: 0;
+  }
+  .mod-icon.m1 { background: linear-gradient(135deg,#7b6cf6,#a78bfa); }
+  .mod-icon.m2 { background: linear-gradient(135deg,#5b9cf5,#93c5fd); }
+  .mod-icon.m3 { background: linear-gradient(135deg,#4ecb8d,#86efac); }
+  .mod-icon.m4 { background: linear-gradient(135deg,#f0a050,#fcd34d); }
+  .mod-title { font-size: 18px; font-weight: 700; }
+  .mod-desc  { font-size: 13px; color: var(--dim); }
+
+  .sub {
+    background: rgba(123,108,246,0.04);
+    border-left: 3px solid var(--accent);
+    padding: 10px 16px;
+    margin: 10px 0;
+    border-radius: 0 8px 8px 0;
+  }
+  .sub-title { font-weight: 600; font-size: 14px; }
+  .sub-desc  { color: var(--dim); font-size: 13px; }
+
+  /* ---------- TOC ---------- */
+  .toc {
+    position: fixed;
+    left: 0;
+    top: 0;
+    width: 260px;
+    height: 100vh;
+    overflow-y: auto;
+    background: var(--card);
+    border: none;
+    border-right: 1px solid var(--border);
+    border-radius: 0;
+    padding: 24px 20px;
+    margin: 0;
+    z-index: 100;
+  }
+  .toc-title { font-size: 16px; font-weight: 700; margin-bottom: 12px; color: var(--accent); }
+  .toc-list { list-style: none; margin: 0; padding: 0; }
+  .toc-list li { margin: 6px 0; }
+  .toc-list a {
+    color: var(--text); text-decoration: none;
+    font-size: 13px; transition: color .15s;
+    display: block;
+    padding: 4px 8px;
+    border-radius: 4px;
+  }
+  .toc-list a:hover { color: var(--accent2); background: rgba(91,156,245,0.08); }
+  .toc-list .indent { padding-left: 16px; }
+
+  /* page layout with sidebar */
+  .page { 
+    max-width: 1020px; 
+    margin-left: max(260px, calc(260px + (100vw - 260px - 1020px) / 2));
+    margin-right: auto;
+    padding: 48px 24px 80px;
+  }
+
+  /* ---------- architecture diagram ---------- */
+  .arch {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 20px 24px;
+    margin: 16px 0;
+    font-family: "SF Mono","Fira Code",monospace;
+    font-size: 12.5px;
+    line-height: 1.6;
+    white-space: pre;
+    overflow-x: auto;
+    color: #a0a4be;
+  }
+
+  /* divider */
+  .hr { border: none; border-top: 1px solid var(--border); margin: 36px 0; }
+
+  @media (max-width: 640px) {
+    .page { padding: 24px 14px 60px; margin-left: 0; }
+    .toc { position: static; width: 100%; height: auto; border-right: none; border-bottom: 1px solid var(--border); }
+    .cover-title { font-size: 26px; }
+    .decision-grid { grid-template-columns: 1fr; }
+  }
+</style>
+</head>
+<body>
+<div class="page">
+
+<!-- ==================== 封面 ==================== -->
+<div class="cover">
+  <div class="cover-title">《文字修仙》产品需求文档</div>
+  <div class="cover-sub">修仙题材文字放置类 Roguelike 叙事游戏 · 微信 / 支付宝双端小程序</div>
+  <div class="cover-meta">
+    <span>版本 v1.1</span>
+    <span>2026-05</span>
+    <span>状态：已确认</span>
+  </div>
+</div>
+
+<!-- ==================== 目录 ==================== -->
+<div class="toc">
+  <div class="toc-title">目录</div>
+  <ul class="toc-list">
+    <li><a href="#s1">一、项目概述与核心决策</a></li>
+    <li class="indent"><a href="#s1-1">1.1 项目背景</a></li>
+    <li class="indent"><a href="#s1-2">1.2 核心定位</a></li>
+    <li class="indent"><a href="#s1-3">1.3 核心决策记录</a></li>
+    <li><a href="#s2">二、世界观与境界体系</a></li>
+    <li class="indent"><a href="#s2-1">2.1 万界世界观</a></li>
+    <li class="indent"><a href="#s2-2">2.2 境界体系</a></li>
+    <li class="indent"><a href="#s2-3">2.3 世界划分与迁移</a></li>
+    <li><a href="#s3">三、战力体系</a></li>
+    <li class="indent"><a href="#s3-1">3.1 核心属性与软属性</a></li>
+    <li class="indent"><a href="#s3-2">3.2 法宝体系</a></li>
+    <li class="indent"><a href="#s3-3">3.3 神通体系</a></li>
+    <li class="indent"><a href="#s3-4">3.4 战斗概率模型</a></li>
+    <li><a href="#s4">四、游戏流程设计</a></li>
+    <li class="indent"><a href="#s4-1">4.1 表现形式</a></li>
+    <li class="indent"><a href="#s4-2">4.2 游戏生命周期</a></li>
+    <li class="indent"><a href="#s4-3">4.3 叙事时间粒度</a></li>
+    <li class="indent"><a href="#s4-4">4.4 事件正负向比例</a></li>
+    <li class="indent"><a href="#s4-5">4.5 流式输出与预生成</a></li>
+    <li><a href="#s5">五、节点类型体系</a></li>
+    <li class="indent"><a href="#s5-1">5.1 事件节点</a></li>
+    <li class="indent"><a href="#s5-2">5.2 战斗节点</a></li>
+    <li class="indent"><a href="#s5-3">5.3 奇遇节点</a></li>
+    <li class="indent"><a href="#s5-4">5.4 机缘节点</a></li>
+    <li class="indent"><a href="#s5-5">5.5 闭关节点</a></li>
+    <li class="indent"><a href="#s5-6">5.6 宗门/势力节点</a></li>
+    <li class="indent"><a href="#s5-7">5.7 天劫节点</a></li>
+    <li class="indent"><a href="#s5-8">5.8 因果节点</a></li>
+    <li class="indent"><a href="#s5-9">5.9 节点触发频率汇总</a></li>
+    <li><a href="#s6">六、Agent 体系设计</a></li>
+    <li class="indent"><a href="#s6-1">6.1 混合式架构</a></li>
+    <li class="indent"><a href="#s6-2">6.2 Agent3 世界大纲 Agent</a></li>
+    <li class="indent"><a href="#s6-3">6.3 Agent1 故事生成 Agent</a></li>
+    <li class="indent"><a href="#s6-4">6.4 Agent2 节点生成 Agent</a></li>
+    <li class="indent"><a href="#s6-5">6.5 一致性保障方案</a></li>
+    <li><a href="#s7">七、功能模块与接口设计</a></li>
+    <li class="indent"><a href="#s7-1">7.1 模块一：双端鉴权</a></li>
+    <li class="indent"><a href="#s7-2">7.2 模块二：个人管理</a></li>
+    <li class="indent"><a href="#s7-3">7.3 模块三：开始游戏（核心）</a></li>
+    <li class="indent"><a href="#s7-4">7.4 模块四：继续游戏</a></li>
+    <li class="indent"><a href="#s7-5">7.5 接口汇总</a></li>
+    <li class="indent"><a href="#s7-6">7.6 边界规则与兜底策略</a></li>
+    <li><a href="#s8">八、技术架构</a></li>
+    <li class="indent"><a href="#s8-1">8.1 技术栈总览</a></li>
+    <li class="indent"><a href="#s8-2">8.2 后端服务分层</a></li>
+    <li class="indent"><a href="#s8-3">8.3 数据库设计</a></li>
+    <li class="indent"><a href="#s8-4">8.4 数据模型定义</a></li>
+    <li><a href="#s9">九、MVP 功能清单</a></li>
+    <li><a href="#s10">十、开发路线图</a></li>
+    <li><a href="#s11">十一、后期版本规划</a></li>
+  </ul>
+</div>
+
+<!-- ==================== 修订记录 ==================== -->
+<div class="card">
+  <h3 style="margin-top:0;color:var(--accent);">修订记录（v1.0 → v1.1）</h3>
+  <table class="tb">
+    <thead><tr><th style="width:60px">#</th><th style="width:160px">章节</th><th>修订要点</th></tr></thead>
+    <tbody>
+      <tr><td>1</td><td>3.1 / 6.5 / 8.4</td><td>统一属性字段命名为 <code>jing / qi / shen</code>，并独立定义 <code>DerivedStats</code>（hp/mp/sp）派生战斗值</td></tr>
+      <tr><td>2</td><td>2.3 / 5.3 / 5.4 / 7.3 / 8.3</td><td>引入"世界压制 + 双路径飞升 + 空间通道"机制，新增 <code>space_channel</code> 表与 <code>ascend-natural</code> / <code>ascend-channel</code> 接口</td></tr>
+      <tr><td>3</td><td>5.7 / 5.9</td><td>节点频率表拆为"常规配额（合计 100%）"+"额外触发节点（不占配额）"两表，明确天劫/因果/闭关/飞升均为额外节点</td></tr>
+      <tr><td>4</td><td>7 章顶部 / 7.1</td><td>新增"通用响应 Envelope <code>{code,msg,data}</code>"，删除 wx-login / ali-login 中冗余的 <code>platform</code> 字段，接口总数更新为 31</td></tr>
+      <tr><td>5</td><td>7.6（新增）</td><td>新增"边界规则与兜底策略"小节，覆盖重投限制、SSE 心跳/多端互斥、Agent 失败兜底、战斗 choose 行为、预生成节点处理、请求频控等</td></tr>
+      <tr><td>6</td><td>8.3</td><td>node 表新增 <code>is_pregenerated / branch_group_id / parent_node_id</code>；world 表新增 <code>status / seq</code>；prop 表新增 <code>obtained_node_id / equipped</code>；删除 save 表冗余 <code>realm / age</code></td></tr>
+      <tr><td>7</td><td>4.3</td><td>补充寿命公式与各境界寿命加成/消耗数值表，新增"压制期"与"飞升路径 B 失败"对寿命的修正规则</td></tr>
+      <tr><td>8</td><td>11</td><td>后期版本编号从 v0.2 倒挂修正为 v1.1 / v1.2 / v1.3 / v1.4 / v2.0 / 重构</td></tr>
+    </tbody>
+  </table>
+</div>
+
+<!-- ============================================================ -->
+<h1 id="s1">一、项目概述与核心决策</h1>
+
+<h2 id="s1-1">1.1 项目背景</h2>
+<p>开发一款基于 <strong>Taro (React) + NestJS (TypeScript)</strong> 全栈架构的修仙题材文字小程序游戏。核心目标有二：</p>
+<ol>
+  <li><strong>全栈落地</strong>：跑通跨端小程序开发、后端业务逻辑、数据库设计与云服务器部署全流程。</li>
+  <li><strong>Agent 能力集成</strong>：在游戏关键流程引入大语言模型（LLM），实现可控成本下的动态叙事生成与结构化状态变更。</li>
+</ol>
+
+<h2 id="s1-2">1.2 核心定位</h2>
+<ul>
+  <li><strong>类型</strong>：修仙题材的文字放置类 Roguelike 叙事游戏。</li>
+  <li><strong>特色</strong>：仅在用户在线时推进游戏时间线，避免离线结算的数值膨胀与剧情跳脱感。游戏体验如同观看一部实时演算的修仙小说。</li>
+  <li><strong>平台</strong>：微信小程序 + 支付宝小程序。</li>
+</ul>
+
+<h2 id="s1-3">1.3 核心决策记录</h2>
+<div class="decision-grid">
+  <div class="decision-item"><div class="label">前端框架</div><div class="value">Taro 4.x (React)</div></div>
+  <div class="decision-item"><div class="label">后端框架</div><div class="value">NestJS (TypeScript)</div></div>
+  <div class="decision-item"><div class="label">Agent 架构</div><div class="value">混合式：生成层（故事+节点）+ 校验层（大纲）</div></div>
+  <div class="decision-item"><div class="label">AI 调用策略</div><div class="value">Agent 驱动，所有节点内容由 Agent 生成</div></div>
+  <div class="decision-item"><div class="label">境界体系</div><div class="value">16 阶（含准圣、圣境）</div></div>
+  <div class="decision-item"><div class="label">叙事时间粒度</div><div class="value">四档：周 / 月 / 年 / 十年</div></div>
+  <div class="decision-item"><div class="label">战斗机制</div><div class="value">概率判定 + Agent 文字描述</div></div>
+  <div class="decision-item"><div class="label">玩家参与度</div><div class="value">关键节点主动选择</div></div>
+  <div class="decision-item"><div class="label">地仙界</div><div class="value">初版不开放，后期扩展</div></div>
+  <div class="decision-item"><div class="label">时间推进</div><div class="value">仅在线时推进</div></div>
+  <div class="decision-item"><div class="label">实时推送</div><div class="value">SSE（Server-Sent Events）</div></div>
+  <div class="decision-item"><div class="label">存档机制</div><div class="value">多存档</div></div>
+  <div class="decision-item"><div class="label">战斗结算</div><div class="value">独立接口（便于前端分步展示）</div></div>
+  <div class="decision-item"><div class="label">世界迁移</div><div class="value">双路径：天地规则飞升 + 空间通道闯关</div></div>
+</div>
+
+<hr class="hr">
+
+<!-- ============================================================ -->
+<h1 id="s2">二、世界观与境界体系</h1>
+
+<h2 id="s2-1">2.1 万界世界观</h2>
+<ul>
+  <li>初版仅开放修仙世界。</li>
+  <li>后期扩展：多世界切换（万界完整实现）。</li>
+</ul>
+
+<h2 id="s2-2">2.2 境界体系（共 16 阶）</h2>
+<table class="tb">
+  <thead><tr><th>序号</th><th>境界</th><th>序号</th><th>境界</th></tr></thead>
+  <tbody>
+    <tr><td>1</td><td>练气</td><td>9</td><td>真仙</td></tr>
+    <tr><td>2</td><td>筑基</td><td>10</td><td>天仙</td></tr>
+    <tr><td>3</td><td>金丹</td><td>11</td><td>玄仙</td></tr>
+    <tr><td>4</td><td>元婴</td><td>12</td><td>金仙</td></tr>
+    <tr><td>5</td><td>化神</td><td>13</td><td>太乙</td></tr>
+    <tr><td>6</td><td>返虚</td><td>14</td><td>大罗</td></tr>
+    <tr><td>7</td><td>渡劫</td><td>15</td><td>准圣</td></tr>
+    <tr><td>8</td><td><strong>大乘</strong> ← 初版通关</td><td>16</td><td>圣境 ← 最终通关</td></tr>
+  </tbody>
+</table>
+<div class="note note-info">初版通关境界为大乘，真仙及以上留后期版本。</div>
+
+<h2 id="s2-3">2.3 世界划分与跨界机制</h2>
+
+<h3>第一类世界（线性推进，含承载上限）</h3>
+<table class="tb">
+  <thead><tr><th>世界</th><th>承载上限境界</th><th>说明</th></tr></thead>
+  <tbody>
+    <tr><td>凡界</td><td>化神</td><td>初版主要舞台。修士可继续修炼至返虚甚至更高，但受世界压制</td></tr>
+    <tr><td>灵界</td><td>天仙</td><td>化神后通过飞升进入</td></tr>
+    <tr><td>仙界</td><td>圣境</td><td>后期版本实现</td></tr>
+  </tbody>
+</table>
+
+<h3>世界压制机制</h3>
+<p>当主角境界<strong>超过当前世界承载上限</strong>后，会受到天地规则压制：</p>
+<ul>
+  <li><strong>修为获取 ×0.2</strong>，修炼速度大幅放缓。</li>
+  <li>节点频率分布动态调整：<strong>修炼增益类事件减少，瓶颈/心魔类负面事件增多</strong>。</li>
+  <li>压制效应在"飞升"完成后立即解除。</li>
+</ul>
+<div class="note note-warn">压制是软性惩罚而非硬性封顶，主角依然可以缓慢成长，但小说式"卡瓶颈"叙事感会自动浮现，倒逼玩家寻求飞升路径。</div>
+
+<h3>跨界（飞升）双路径</h3>
+
+<h4>路径 A：天地规则飞升（主线 / 安全）</h4>
+<ul>
+  <li><strong>触发条件</strong>：修至当前世界承载上限的<strong>巅峰</strong>（例：化神大圆满）。</li>
+  <li><strong>触发方式</strong>：强制剧情节点，类似"渡劫"，需通过天地考核。</li>
+  <li><strong>风险</strong>：考核失败可能境界回退或重伤；<strong>不会丢失法宝/资源</strong>。</li>
+  <li><strong>奖励</strong>：稳定抵达下一界核心区域，自带"飞升者"身份加成（NPC 关系初始好感+）。</li>
+</ul>
+
+<h4>路径 B：空间通道飞升（支线 / 高风险）</h4>
+<ul>
+  <li><strong>发现方式</strong>：在游历、探险类事件、奇遇节点、机缘节点中<strong>有概率</strong>偶遇空间通道。</li>
+  <li><strong>触发条件</strong>：境界达到<strong>当前世界承载上限即可</strong>（如刚化神便可冒险闯通道），不要求巅峰。</li>
+  <li><strong>属性</strong>：每条空间通道携带 <code>quality</code>（品质）与 <code>danger</code>（危险度），由发现节点的上下文决定。</li>
+</ul>
+
+<table class="tb">
+  <thead><tr><th>品质</th><th>目的地</th><th>抵达概率</th><th>资源损失</th><th>受伤概率</th></tr></thead>
+  <tbody>
+    <tr><td>高品（稳定）</td><td>灵界核心区</td><td>高（90%+）</td><td>低</td><td>低</td></tr>
+    <tr><td>中品</td><td>灵界边缘</td><td>中（60~80%）</td><td>中</td><td>中</td></tr>
+    <tr><td>低品（残破）</td><td>随机灵界小世界 / 险地</td><td>低（30~50%）</td><td>高（可能丢法宝）</td><td>高（可能重伤甚至陨落）</td></tr>
+  </tbody>
+</table>
+
+<div class="note note-info">
+  <strong>设计意图</strong>：路径 A 提供主线安全感，路径 B 提供"野路子修仙"叙事张力。低品通道有概率把主角直接抛入仙界险地（极小概率超规格收益），契合修仙小说"机缘巧合越界冒险"的常见桥段。
+</div>
+
+<h3>第二类世界</h3>
+<ul>
+  <li><strong>地仙界</strong>：可容纳所有境界，初版不实现，作为后期特殊分支路线（可由极低品空间通道偶发抵达）。</li>
+</ul>
+
+<h3>跨界生成流程</h3>
+<p>无论路径 A 还是路径 B，最终都收口到统一的两步生成：</p>
+<ol>
+  <li>调用 Agent3 生成新世界大纲（受到 <code>quality</code>/<code>targetWorldHint</code> 影响，决定登场区域）。</li>
+  <li>调用 Agent1 在新世界框架内生成过渡故事（路径 B 会强调"狼狈/迷茫"叙事基调）。</li>
+</ol>
+
+<hr class="hr">
+
+<!-- ============================================================ -->
+<h1 id="s3">三、战力体系</h1>
+
+<h2 id="s3-1">3.1 核心属性与软属性</h2>
+
+<h3>核心属性（基础三维）</h3>
+<table class="tb">
+  <thead><tr><th>属性</th><th>字段名</th><th>说明</th></tr></thead>
+  <tbody>
+    <tr><td><strong>精</strong></td><td><code>jing</code></td><td>肉体强度，影响生命与防御</td></tr>
+    <tr><td><strong>气</strong></td><td><code>qi</code></td><td>灵力储量，影响法术威力与持续</td></tr>
+    <tr><td><strong>神</strong></td><td><code>shen</code></td><td>神识强度，影响感知与神通威力</td></tr>
+  </tbody>
+</table>
+
+<h3>派生战斗值（DerivedStats）</h3>
+<table class="tb">
+  <thead><tr><th>字段</th><th>含义</th><th>计算公式（示例）</th></tr></thead>
+  <tbody>
+    <tr><td><code>hp</code></td><td>气血上限</td><td><code>jing × 10 + 境界系数</code></td></tr>
+    <tr><td><code>mp</code></td><td>灵力上限</td><td><code>qi × 8 + 境界系数</code></td></tr>
+    <tr><td><code>sp</code></td><td>神识上限</td><td><code>shen × 6 + 境界系数</code></td></tr>
+  </tbody>
+</table>
+<div class="note note-info">基础三维 <code>jing/qi/shen</code> 仅由突破、奇遇、丹药等长期成长改变；派生值 <code>hp/mp/sp</code> 在战斗与节点中实时变化，由后端按公式计算，不直接持久化基础三维以外的字段。</div>
+
+<h3>软属性（不直接影响战力，影响事件概率）</h3>
+<table class="tb">
+  <thead><tr><th>属性</th><th>作用</th></tr></thead>
+  <tbody>
+    <tr><td>资质</td><td>影响修炼速度基础值</td></tr>
+    <tr><td>悟性</td><td>影响顿悟、功法学习速度</td></tr>
+    <tr><td>气运</td><td>影响奇遇触发率、事件正负向比例</td></tr>
+  </tbody>
+</table>
+
+<h2 id="s3-2">3.2 法宝体系（共 6 级）</h2>
+<table class="tb">
+  <thead><tr><th>等级</th><th>名称</th><th>对应境界段</th></tr></thead>
+  <tbody>
+    <tr><td>1</td><td>符器</td><td>练气 / 筑基</td></tr>
+    <tr><td>2</td><td>法器</td><td>金丹 / 元婴</td></tr>
+    <tr><td>3</td><td>灵器</td><td>化神 / 返虚</td></tr>
+    <tr><td>4</td><td>仙器</td><td>渡劫 / 大乘</td></tr>
+    <tr><td>5</td><td>后天灵宝</td><td>真仙+</td></tr>
+    <tr><td>6</td><td>先天灵宝</td><td>金仙+</td></tr>
+  </tbody>
+</table>
+<p>法宝含<strong>词条系统</strong>，词条由 Agent 生成，提供属性加成。</p>
+
+<h2 id="s3-3">3.3 神通体系</h2>
+<ul>
+  <li>各境界阶段可习得对应属性技能。</li>
+  <li>顶级神通：<strong>天罡三十六变</strong>、<strong>地煞七十二变</strong>，仅可通过稀有奇遇获得。</li>
+  <li>初版实现方式：<code>{神通类型, 属性加成, 稀有度}</code> 数据结构 + Agent 生成名称与效果描述。</li>
+</ul>
+
+<h2 id="s3-4">3.4 战斗概率模型</h2>
+<pre>战斗胜率 = f(我方综合战力, 对手综合战力, 气运加成, 随机因子)</pre>
+
+<h3>战斗结果五档</h3>
+<table class="tb">
+  <thead><tr><th>档位</th><th>结果</th><th>说明</th></tr></thead>
+  <tbody>
+    <tr><td>1</td><td>大胜</td><td>碾压对手，可获丰厚收益</td></tr>
+    <tr><td>2</td><td>小胜</td><td>获胜但有消耗</td></tr>
+    <tr><td>3</td><td>平局</td><td>各有损伤，平手而退</td></tr>
+    <tr><td>4</td><td>受伤败退</td><td>落败但成功撤退</td></tr>
+    <tr><td>5</td><td>重伤 / 战死</td><td>伤势极重甚至当场陨落</td></tr>
+  </tbody>
+</table>
+
+<hr class="hr">
+
+<!-- ============================================================ -->
+<h1 id="s4">四、游戏流程设计</h1>
+
+<h2 id="s4-1">4.1 表现形式</h2>
+<ul>
+  <li><strong>纯文字展示</strong>。</li>
+  <li>界面上方：主角各项战力属性数据面板。</li>
+  <li>界面上方：主角人生历程叙事流（文字滚动展示）。</li>
+  <li>视觉风格：深色底色 + 古籍宣纸纹理，字体使用 <code>霞鹜文楷</code> 或系统默认衬线体。</li>
+  <li>操作：游戏主要在后台自动运行，玩家仅需在出现蓝色高亮选项时点击决策。</li>
+</ul>
+
+<h2 id="s4-2">4.2 游戏生命周期</h2>
+<div class="flow">
+  <span class="flow-step hl">转世投胎</span><span class="flow-arrow">→</span>
+  <span class="flow-step">初始属性生成</span><span class="flow-arrow">→</span>
+  <span class="flow-step">2~3 个引导事件</span><span class="flow-arrow">→</span>
+  <span class="flow-step">按部就班修仙</span><span class="flow-arrow">→</span>
+  <span class="flow-step">各境界节点触发</span><span class="flow-arrow">→</span>
+  <span class="flow-step hl">玩家选择</span><span class="flow-arrow">→</span>
+  <span class="flow-step hl">结局</span>
+</div>
+<p>结局类型：通关（大乘）/ 战死 / 寿尽。</p>
+
+<h2 id="s4-3">4.3 叙事时间粒度</h2>
+<table class="tb">
+  <thead><tr><th>境界</th><th>时间单位</th><th>每段节点数</th><th>每节点寿命消耗</th></tr></thead>
+  <tbody>
+    <tr><td>练气 / 筑基</td><td>周</td><td>3 ~ 4 个</td><td>约 7 天</td></tr>
+    <tr><td>金丹 / 元婴</td><td>月</td><td>4 ~ 5 个</td><td>约 30 天</td></tr>
+    <tr><td>化神 / 返虚</td><td>年</td><td>4 ~ 5 个</td><td>约 1 年</td></tr>
+    <tr><td>渡劫 / 大乘</td><td>十年</td><td>3 ~ 4 个</td><td>约 10 年</td></tr>
+  </tbody>
+</table>
+<ul>
+  <li><strong>寿命计算</strong>：初始寿命由属性生成（气属性越高初始寿命越长），每个节点消耗固定寿命，随境界递增。寿命耗尽触发结局。</li>
+  <li><strong>时间推进规则</strong>：仅在线推进。用户退出小程序，故事世界静止。</li>
+</ul>
+
+<h3>初始寿命与突破加成（公式 + 数值表）</h3>
+<pre>maxAge = 80 + qi × 2 + 累计突破加成 + 奇遇加成</pre>
+<table class="tb">
+  <thead><tr><th>境界</th><th>突破成功后寿命加成</th><th>每节点寿命消耗</th><th>累计典型寿命</th></tr></thead>
+  <tbody>
+    <tr><td>初始（凡人）</td><td>—</td><td>—</td><td>≈ 80 + qi×2</td></tr>
+    <tr><td>练气</td><td>+20</td><td>7 天 / 节点</td><td>≈ 100 ~ 130</td></tr>
+    <tr><td>筑基</td><td>+50</td><td>7 天 / 节点</td><td>≈ 200</td></tr>
+    <tr><td>金丹</td><td>+150</td><td>30 天 / 节点</td><td>≈ 400</td></tr>
+    <tr><td>元婴</td><td>+500</td><td>30 天 / 节点</td><td>≈ 1000</td></tr>
+    <tr><td>化神</td><td>+2000</td><td>1 年 / 节点</td><td>≈ 3000</td></tr>
+    <tr><td>返虚</td><td>+5000</td><td>1 年 / 节点</td><td>≈ 8000</td></tr>
+    <tr><td>渡劫</td><td>+20000</td><td>10 年 / 节点</td><td>≈ 28000</td></tr>
+    <tr><td>大乘</td><td>+50000</td><td>10 年 / 节点</td><td>≈ 80000</td></tr>
+  </tbody>
+</table>
+<div class="note note-info">
+  <strong>压制期补丁</strong>：处于"超载境界"时，节点寿命消耗 ×1.5，加速倒逼飞升。<br>
+  <strong>飞升路径 B 失败补丁</strong>：失踪虚空消耗约 5~50 年寿元；闯入低品通道直接重伤可能再扣 100~500 年寿元。
+</div>
+
+<h2 id="s4-4">4.4 事件正负向比例（随境界动态调整）</h2>
+<table class="tb">
+  <thead><tr><th>境界段</th><th>正向比例</th><th>设计意图</th></tr></thead>
+  <tbody>
+    <tr><td>练气 ~ 筑基</td><td>85%</td><td>新手友好，建立代入感</td></tr>
+    <tr><td>金丹 ~ 元婴</td><td>75%</td><td>开始出现危机感</td></tr>
+    <tr><td>化神 ~ 返虚</td><td>65%</td><td>高风险高回报阶段</td></tr>
+    <tr><td>渡劫 ~ 大乘</td><td>55%</td><td>冲关阶段，紧张刺激</td></tr>
+  </tbody>
+</table>
+<div class="note note-info">气运软属性在此基础上做加减修正，高气运角色正向比例更高。</div>
+
+<h2 id="s4-5">4.5 流式输出与预生成</h2>
+<ul>
+  <li>叙事文本采用<strong>流式输出</strong>，提升阅读体验。</li>
+  <li>选项直接显示（不等待流式完成）。</li>
+  <li><strong>预生成机制</strong>：用户在选择时，每个选项对应的后续内容已经预先生成并缓存，选择后可直接展示。</li>
+  <li>预生成内容持久化存储，用户回溯时可复用。</li>
+</ul>
+
+<hr class="hr">
+
+<!-- ============================================================ -->
+<h1 id="s5">五、节点类型体系</h1>
+
+<h2 id="s5-1">5.1 事件节点 <code>EVENT</code> <span class="tag tag-core">核心</span></h2>
+<p>财侣法地四维驱动，日常修仙生活的主体。</p>
+<table class="tb">
+  <thead><tr><th>子类型</th><th>示例</th><th>维度</th></tr></thead>
+  <tbody>
+    <tr><td>财·交易</td><td>坊市发现残缺法器，掌柜要价三百灵石</td><td>财</td></tr>
+    <tr><td>财·悬赏</td><td>宗门发布讨伐妖兽悬赏，奖励丰厚</td><td>财</td></tr>
+    <tr><td>侣·邂逅</td><td>遇见一位同阶散修，似有结伴之意</td><td>侣</td></tr>
+    <tr><td>侣·论道</td><td>前辈主动指点修炼困惑，顿悟概率提升</td><td>侣</td></tr>
+    <tr><td>法·功法</td><td>发现残缺功法，修炼有风险但收益极大</td><td>法</td></tr>
+    <tr><td>法·秘技</td><td>老者愿传授辅修百艺</td><td>法</td></tr>
+    <tr><td>地·福地</td><td>偶然踏入灵气充裕的山洞，可闭关</td><td>地</td></tr>
+    <tr><td>地·险境</td><td>误入上古禁地，危机四伏但宝物遍地</td><td>地</td></tr>
+  </tbody>
+</table>
+
+<h2 id="s5-2">5.2 战斗节点 <code>BATTLE</code> <span class="tag tag-core">核心</span></h2>
+<table class="tb">
+  <thead><tr><th>子类型</th><th>触发方式</th><th>可选行动</th></tr></thead>
+  <tbody>
+    <tr><td>切磋 <code>DUEL</code></td><td>同阶道友约战</td><td>接受 / 婉拒</td></tr>
+    <tr><td>遭遇 <code>ENCOUNTER</code></td><td>野外遭遇妖兽或敌修</td><td>迎战 / 逃跑 / 谈判</td></tr>
+    <tr><td>死战 <code>DEADLY</code></td><td>仇敌或强敌追杀</td><td>死战 / 舍命逃脱</td></tr>
+    <tr><td>守护 <code>PROTECT</code></td><td>需保护他人</td><td>挺身 / 置身事外</td></tr>
+  </tbody>
+</table>
+
+<h2 id="s5-3">5.3 奇遇节点 <code>WONDER</code> <span class="tag tag-core">核心</span></h2>
+<p>触发概率较低，收益极高，可改变人生走向。</p>
+<table class="tb">
+  <thead><tr><th>子类型</th><th>示例</th></tr></thead>
+  <tbody>
+    <tr><td>传承奇遇</td><td>发现上古洞府，获得前辈毕生修炼心得</td></tr>
+    <tr><td>灵宝奇遇</td><td>天降异象，法宝主动认主</td></tr>
+    <tr><td>天材奇遇</td><td>发现万年灵药，服下可直接突破瓶颈</td></tr>
+    <tr><td>异变奇遇</td><td>修炼中突发异变，可能大成也可能走火入魔</td></tr>
+    <tr><td>空间奇遇</td><td>险地深处发现一道扭曲空间裂缝，可探查为空间通道（潜在飞升路径 B）</td></tr>
+  </tbody>
+</table>
+
+<h2 id="s5-4">5.4 机缘节点 <code>KARMA</code> <span class="tag tag-core">核心</span></h2>
+<p>与 NPC 或世界剧情强关联，故事 Agent 预设的"命运锚点"。</p>
+<table class="tb">
+  <thead><tr><th>子类型</th><th>示例</th></tr></thead>
+  <tbody>
+    <tr><td>师门机缘</td><td>掌门闭关前单独召见，传下镇派神通</td></tr>
+    <tr><td>宿敌机缘</td><td>与宿敌命运再度交织，旧恨新仇一并清算</td></tr>
+    <tr><td>道侣机缘</td><td>与结伴多年的道侣情愫渐生</td></tr>
+    <tr><td>预言机缘</td><td>算命老者为主角批命，预言某事将发生</td></tr>
+    <tr><td>飞升机缘</td><td>故人/前辈赠送残破空间通道坐标，可作为飞升路径 B 入口</td></tr>
+  </tbody>
+</table>
+
+<h2 id="s5-5">5.5 闭关节点 <code>RETREAT</code> <span class="tag tag-ext">扩展</span></h2>
+<p>玩家主动触发，<strong>不占用常规节点配额</strong>。</p>
+<ul>
+  <li><strong>短期闭关</strong>（1 个时间单位）：稳定修为提升，风险低。</li>
+  <li><strong>长期闭关</strong>（3 个时间单位）：可能错过机缘，也可能躲过劫难。</li>
+  <li><strong>特殊触发</strong>：气运高时闭关可能顿悟突破。</li>
+</ul>
+
+<h2 id="s5-6">5.6 宗门/势力节点 <code>FACTION</code> <span class="tag tag-ext">扩展</span></h2>
+<table class="tb">
+  <thead><tr><th>子类型</th><th>示例</th></tr></thead>
+  <tbody>
+    <tr><td>宗门任务</td><td>宗门委派任务，完成获贡献点换资源</td></tr>
+    <tr><td>势力冲突</td><td>所在势力与他派摩擦，主角被卷入</td></tr>
+    <tr><td>晋升考核</td><td>宗门内部排名考核，影响地位</td></tr>
+  </tbody>
+</table>
+
+<h2 id="s5-7">5.7 天劫节点 <code>TRIBULATION</code> <span class="tag tag-ext">扩展</span></h2>
+<p>特定境界突破时强制触发，高风险高收益。<strong>天劫节点为额外触发节点，不计入当段常规节点配额</strong>。</p>
+<p><strong>触发时机</strong>：金丹 / 元婴 / 化神 / 渡劫 / 大乘 突破时必触发。</p>
+<table class="tb">
+  <thead><tr><th>选项</th><th>条件</th><th>成功率</th></tr></thead>
+  <tbody>
+    <tr><td>万全准备后渡劫</td><td>消耗资源/法宝</td><td>高</td></tr>
+    <tr><td>强行渡劫</td><td>无需资源</td><td>低</td></tr>
+    <tr><td>借助外力渡劫</td><td>需 NPC 关系或特定法宝</td><td>中高</td></tr>
+  </tbody>
+</table>
+<p><strong>结果</strong>：渡劫成功 / 失败（失败不一定死，可能境界回退）。</p>
+
+<h2 id="s5-8">5.8 因果节点 <code>CAUSALITY</code> <span class="tag tag-ext">扩展</span></h2>
+<p>基于玩家历史选择的延迟反馈，体现"选择真的有影响"。</p>
+<ul>
+  <li>杀死落败对手 → N 个节点后触发"死者门人寻仇"。</li>
+  <li>帮助某 NPC → 该 NPC 危急时刻出手相救。</li>
+  <li>由结构化状态管理记录"因果债"，系统自动插入，<strong>不占用常规节点配额</strong>。</li>
+</ul>
+
+<h2 id="s5-9">5.9 节点触发频率汇总</h2>
+
+<h3>表 A：常规节点配额（合计 100%）</h3>
+<table class="tb">
+  <thead><tr><th>境界</th><th>时间单位</th><th>节点数</th><th>事件</th><th>战斗</th><th>奇遇</th><th>机缘</th><th>宗门/势力</th></tr></thead>
+  <tbody>
+    <tr><td>练气/筑基</td><td>周</td><td>3~4</td><td>60%</td><td>15%</td><td>10%</td><td>10%</td><td>5%</td></tr>
+    <tr><td>金丹/元婴</td><td>月</td><td>4~5</td><td>50%</td><td>20%</td><td>15%</td><td>10%</td><td>5%</td></tr>
+    <tr><td>化神/返虚</td><td>年</td><td>4~5</td><td>40%</td><td>25%</td><td>15%</td><td>15%</td><td>5%</td></tr>
+    <tr><td>渡劫/大乘</td><td>十年</td><td>3~4</td><td>30%</td><td>25%</td><td>15%</td><td>20%</td><td>10%</td></tr>
+  </tbody>
+</table>
+
+<h3>表 B：额外触发节点（不占配额）</h3>
+<table class="tb">
+  <thead><tr><th>类型</th><th>触发方式</th><th>触发条件</th></tr></thead>
+  <tbody>
+    <tr><td><code>RETREAT</code> 闭关</td><td>玩家主动</td><td>无前置，随时可发起</td></tr>
+    <tr><td><code>TRIBULATION</code> 天劫</td><td>系统自动</td><td>金丹 / 元婴 / 化神 / 渡劫 / 大乘 突破时必触发</td></tr>
+    <tr><td><code>CAUSALITY</code> 因果</td><td>系统自动</td><td>karma_debts 计时到期，按延迟节点数插入</td></tr>
+    <tr><td>飞升路径 A</td><td>系统自动</td><td>境界达到当前世界承载上限的巅峰</td></tr>
+    <tr><td>飞升路径 B</td><td>玩家主动</td><td>已发现空间通道，且境界达到承载上限</td></tr>
+  </tbody>
+</table>
+<div class="note note-info">额外节点不计入当段配额，但仍记录到 <code>node</code> 表，并计入"已用节点序号"，因此会消耗寿元。</div>
+
+<h3>世界压制下的修正</h3>
+<p>当主角进入"超载境界"（如凡界化神后继续修返虚），表 A 中"事件"列内部的子类型分布会自动调整：</p>
+<ul>
+  <li>"修炼增益类事件"权重 ×0.3（如福地、论道）。</li>
+  <li>"瓶颈/心魔类负面事件"权重 ×2.0。</li>
+  <li>触发空间通道相关奇遇 / 飞升机缘的概率显著提升。</li>
+</ul>
+
+<hr class="hr">
+
+<!-- ============================================================ -->
+<h1 id="s6">六、Agent 体系设计</h1>
+
+<h2 id="s6-1">6.1 混合式架构</h2>
+<div class="arch">┌─────────────────────────────────────────────────────┐
+│                    校验层                            │
+│            Agent3 — 世界大纲 Agent                    │
+│   职责：生成世界框架 + 校验生成内容一致性              │
+└──────────────────────┬──────────────────────────────┘
+                       ↓ 校验通过
+┌─────────────────────────────────────────────────────┐
+│                    生成层                            │
+│            Agent1 — 故事生成 Agent                    │
+│   职责：转世故事、NPC 列表、命运锚点                  │
+└──────────────────────┬──────────────────────────────┘
+                       ↓
+┌─────────────────────────────────────────────────────┐
+│                    生成层                            │
+│            Agent2 — 节点生成 Agent                    │
+│   职责：节点内容、玩家选项、状态变更                   │
+└─────────────────────────────────────────────────────┘</div>
+
+<h2 id="s6-2">6.2 Agent3 — 世界大纲 Agent（校验层）</h2>
+<p><strong>触发时机</strong>：新游戏开始时，或主角进入新世界时。</p>
+<h4>输出内容</h4>
+<ul>
+  <li>世界名称与基础设定（地理、历史、当前格局）。</li>
+  <li>主要修仙势力（门派 / 散修联盟 / 魔道等）。</li>
+  <li>世界级别的重大事件脉络。</li>
+  <li>该世界的特殊规则（如"此界灵气匮乏，修炼速度减半"）。</li>
+</ul>
+<h4>校验职责</h4>
+<ul>
+  <li>校验 Agent1 / Agent2 生成内容是否符合当前世界规则。</li>
+  <li>过滤不符合当前境界的节点内容（如练气期出现仙界资源）。</li>
+  <li>校验失败则要求重新生成，形成闭环。</li>
+</ul>
+
+<h2 id="s6-3">6.3 Agent1 — 故事生成 Agent（生成层）</h2>
+<p><strong>触发时机</strong>：新游戏开始时（在 Agent3 之后），或世界迁移时。</p>
+<h4>输出内容</h4>
+<ul>
+  <li>主角出身背景（家族 / 门派 / 散修）。</li>
+  <li>核心 NPC 列表（师父 / 道侣 / 宿敌 / 挚友，含性格与关系）。</li>
+  <li>主角命运宏观走向（松散大纲，不影响玩家选择自由度）。</li>
+  <li>预设若干"命运锚点"（机缘节点的原材料）。</li>
+</ul>
+
+<h2 id="s6-4">6.4 Agent2 — 节点生成 Agent（生成层）</h2>
+<p><strong>触发时机</strong>：每个节点结束后，预生成接下来 2~3 个节点（滚动更新）。</p>
+<h4>输入上下文</h4>
+<ul>
+  <li>Agent3 世界大纲摘要。</li>
+  <li>Agent1 故事脉络摘要。</li>
+  <li>当前结构化状态（主角属性、持有法宝、NPC 关系、因果债记录）。</li>
+  <li>最近 N 个节点的历史摘要。</li>
+</ul>
+<h4>输出内容</h4>
+<ul>
+  <li>节点类型与子类型。</li>
+  <li>节点叙事文本（200~400 字）。</li>
+  <li>玩家可选项（2~3 个，带简短说明）。</li>
+  <li>各选项对结构化状态的预期影响（JSON 格式）。</li>
+</ul>
+<h4>边界约束</h4>
+<ul>
+  <li>配置"境界白名单"，限制生成内容的境界范围。</li>
+  <li>后端增加一层校验，过滤矛盾内容。</li>
+</ul>
+
+<h2 id="s6-5">6.5 一致性保障方案</h2>
+
+<h3>6.5.1 结构化状态管理（存数据库，记录"事实"）</h3>
+<pre>{
+  "baseAttrs": { "jing": 90, "qi": 120, "shen": 80 },
+  "derived":   { "hp": 950, "mp": 1020, "sp": 520 },
+  "character": { "realm": "金丹", "exp": 4200 },
+  "inventory": ["青竹剑（法器）", "固元丹×3"],
+  "skills": ["御剑术", "火球咒"],
+  "npc_relations": {
+    "师父李玄真": { "status": "在世", "affinity": 85 },
+    "宿敌王霸天": { "status": "在世", "affinity": -60 }
+  },
+  "karma_debts": [
+    { "event": "杀死落败的陈刚", "triggered": false, "delay_nodes": 5 }
+  ],
+  "world_flags": ["已开启东海秘境", "魔道入侵已开始"]
+}</pre>
+
+<h3>6.5.2 故事摘要压缩（存数据库，记录"叙事氛围"）</h3>
+<ul>
+  <li>每 5 个节点由 Agent 自动生成一次摘要，替代原始文本输入上下文。</li>
+  <li>保留关键转折点的原始文本片段。</li>
+  <li>近几次对话保留，更远的通过摘要压缩，避免上下文过长导致重复/遗忘。</li>
+</ul>
+
+<h3>6.5.3 Agent 输出约束</h3>
+<ul>
+  <li>Agent 必须返回 <strong>JSON 格式的指令</strong>（如 <code>{ "action": "add_exp", "value": 500 }</code>）。</li>
+  <li>严禁 Agent 直接修改数据库，所有状态变更由后端逻辑层执行。</li>
+</ul>
+
+<hr class="hr">
+
+<!-- ============================================================ -->
+<h1 id="s7">七、功能模块与接口设计</h1>
+
+<div class="stats">
+  <div class="stat"><div class="stat-val">4</div><div class="stat-lbl">一级模块</div></div>
+  <div class="stat"><div class="stat-val">12</div><div class="stat-lbl">子模块</div></div>
+  <div class="stat"><div class="stat-val">8</div><div class="stat-lbl">游戏步骤</div></div>
+  <div class="stat"><div class="stat-val">31</div><div class="stat-lbl">API 接口</div></div>
+</div>
+
+<h3>通用响应格式（Envelope）</h3>
+<p>除 SSE 外，所有 HTTP 接口统一返回如下 JSON 结构：</p>
+<pre>{
+  "code": 0,            // 0 表示成功；非 0 为业务错误码
+  "msg": "ok",          // 错误描述（成功时为 "ok"）
+  "data": { ... }       // 实际业务数据，下方各接口"返回数据"列描述的就是 data 部分
+}</pre>
+<div class="note note-info">下文各接口"返回数据"列默认指 <code>data</code> 字段内容；错误时 <code>data</code> 可为 null。错误码统一规范见后期附录。</div>
+
+<!-- ==================== 模块一 ==================== -->
+<h2 id="s7-1">7.1 模块一：双端鉴权</h2>
+<div class="mod-card">
+  <div class="mod-head">
+    <div class="mod-icon m1">🔐</div>
+    <div>
+      <div class="mod-title">双端鉴权模块</div>
+      <div class="mod-desc">微信/支付宝小程序统一登录，建立用户身份体系</div>
+    </div>
+  </div>
+
+  <div class="sub">
+    <div class="sub-title">1.1 微信登录</div>
+    <div class="sub-desc">前端调用 wx.login 获取 code → 后端用 code 换 openid/session_key → 签发 JWT</div>
+  </div>
+  <div class="sub">
+    <div class="sub-title">1.2 支付宝登录</div>
+    <div class="sub-desc">前端调用 my.getAuthCode 获取 authCode → 后端用 authCode 换 user_id → 签发 JWT</div>
+  </div>
+  <div class="sub">
+    <div class="sub-title">1.3 Token 管理</div>
+    <div class="sub-desc">JWT 签发与校验，双端统一鉴权逻辑，Token 过期自动刷新</div>
+  </div>
+
+  <table class="tb">
+    <thead><tr><th style="width:60px">方法</th><th style="width:220px">路径</th><th>说明</th><th>请求参数</th><th>返回数据</th></tr></thead>
+    <tbody>
+      <tr>
+        <td><span class="tag tag-post">POST</span></td>
+        <td class="path">/api/auth/wx-login</td>
+        <td>微信登录</td>
+        <td><code>{ code }</code></td>
+        <td><code>{ token, refreshToken, user }</code></td>
+      </tr>
+      <tr>
+        <td><span class="tag tag-post">POST</span></td>
+        <td class="path">/api/auth/ali-login</td>
+        <td>支付宝登录</td>
+        <td><code>{ authCode }</code></td>
+        <td><code>{ token, refreshToken, user }</code></td>
+      </tr>
+      <tr>
+        <td><span class="tag tag-post">POST</span></td>
+        <td class="path">/api/auth/refresh</td>
+        <td>刷新 Token</td>
+        <td><code>{ refreshToken }</code></td>
+        <td><code>{ token, refreshToken }</code></td>
+      </tr>
+    </tbody>
+  </table>
+</div>
+
+<!-- ==================== 模块二 ==================== -->
+<h2 id="s7-2">7.2 模块二：个人管理</h2>
+<div class="mod-card">
+  <div class="mod-head">
+    <div class="mod-icon m2">👤</div>
+    <div>
+      <div class="mod-title">个人管理模块</div>
+      <div class="mod-desc">用户资料管理与游戏记录查看，支持多存档</div>
+    </div>
+  </div>
+
+  <div class="sub">
+    <div class="sub-title">2.1 个人资料</div>
+    <div class="sub-desc">查看/修改昵称等基本信息</div>
+  </div>
+  <div class="sub">
+    <div class="sub-title">2.2 游戏记录</div>
+    <div class="sub-desc">查看历史游戏列表、单局详情（含完整故事回顾）、结局统计</div>
+  </div>
+  <div class="sub">
+    <div class="sub-title">2.3 存档管理</div>
+    <div class="sub-desc">查看当前存档列表、删除存档。支持多个存档同时存在</div>
+  </div>
+
+  <table class="tb">
+    <thead><tr><th style="width:60px">方法</th><th style="width:240px">路径</th><th>说明</th><th>请求参数</th><th>返回数据</th></tr></thead>
+    <tbody>
+      <tr>
+        <td><span class="tag tag-get">GET</span></td>
+        <td class="path">/api/user/profile</td>
+        <td>获取个人资料</td>
+        <td>—</td>
+        <td><code>{ nickname, avatar, createdAt }</code></td>
+      </tr>
+      <tr>
+        <td><span class="tag tag-put">PUT</span></td>
+        <td class="path">/api/user/profile</td>
+        <td>修改个人资料</td>
+        <td><code>{ nickname }</code></td>
+        <td><code>{ ok }</code></td>
+      </tr>
+      <tr>
+        <td><span class="tag tag-get">GET</span></td>
+        <td class="path">/api/user/records</td>
+        <td>游戏记录列表</td>
+        <td><code>{ page, size }</code></td>
+        <td><code>{ total, list[{ id, name, realm, ending, playedAt }] }</code></td>
+      </tr>
+      <tr>
+        <td><span class="tag tag-get">GET</span></td>
+        <td class="path">/api/user/records/:id</td>
+        <td>单局游戏详情</td>
+        <td>—</td>
+        <td><code>{ record, story[] }</code></td>
+      </tr>
+      <tr>
+        <td><span class="tag tag-get">GET</span></td>
+        <td class="path">/api/user/saves</td>
+        <td>存档列表</td>
+        <td>—</td>
+        <td><code>{ saves[{ id, name, realm, age, updatedAt }] }</code></td>
+      </tr>
+      <tr>
+        <td><span class="tag tag-delete">DELETE</span></td>
+        <td class="path">/api/user/saves/:id</td>
+        <td>删除存档</td>
+        <td>—</td>
+        <td><code>{ ok }</code></td>
+      </tr>
+    </tbody>
+  </table>
+</div>
+
+<!-- ==================== 模块三 ==================== -->
+<h2 id="s7-3">7.3 模块三：开始游戏（核心）</h2>
+<div class="mod-card">
+  <div class="mod-head">
+    <div class="mod-icon m3">⚔️</div>
+    <div>
+      <div class="mod-title">开始游戏模块</div>
+      <div class="mod-desc">游戏核心流程，包含角色创建、Agent 生成、游戏循环、结局判定</div>
+    </div>
+  </div>
+
+  <!-- 步骤1 -->
+  <div class="step">
+    <div class="step-head">
+      <div class="step-num">1</div>
+      <div class="step-title">创建角色</div>
+    </div>
+    <div class="step-body">
+      <p class="desc">系统随机生成精/气/神/资质/悟性/气运/姓名/初始寿元，玩家预览后选择"确认"或"重投"（限3次）</p>
+      <table class="tb">
+        <thead><tr><th style="width:60px">方法</th><th style="width:260px">路径</th><th>说明</th><th>请求参数</th><th>返回数据</th></tr></thead>
+        <tbody>
+          <tr>
+            <td><span class="tag tag-post">POST</span></td>
+            <td class="path">/api/game/roll-character</td>
+            <td>随机生成角色属性</td>
+            <td>—</td>
+            <td><code>{ name, jing, qi, shen, talent, wisdom, luck, maxAge }</code></td>
+          </tr>
+          <tr>
+            <td><span class="tag tag-post">POST</span></td>
+            <td class="path">/api/game/confirm-character</td>
+            <td>确认角色，创建新存档</td>
+            <td><code>{ character }</code></td>
+            <td><code>{ saveId, character }</code></td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- 步骤2 -->
+  <div class="step">
+    <div class="step-head">
+      <div class="step-num">2</div>
+      <div class="step-title">生成世界观与故事</div>
+    </div>
+    <div class="step-body">
+      <p class="desc">角色确认后自动触发。先调 Agent3 生成世界框架，再调 Agent1 在框架内生成故事。Agent3 校验 Agent1 输出，失败则重新生成。</p>
+      <table class="tb">
+        <thead><tr><th style="width:60px">方法</th><th style="width:260px">路径</th><th>说明</th><th>请求参数</th><th>返回数据</th></tr></thead>
+        <tbody>
+          <tr>
+            <td><span class="tag tag-post">POST</span></td>
+            <td class="path">/api/game/generate-world</td>
+            <td>生成世界大纲（Agent3）</td>
+            <td><code>{ saveId }</code></td>
+            <td><code>{ worldId, worldName, history, factions[], rules[] }</code></td>
+          </tr>
+          <tr>
+            <td><span class="tag tag-post">POST</span></td>
+            <td class="path">/api/game/generate-story</td>
+            <td>生成故事脉络与 NPC（Agent1）</td>
+            <td><code>{ saveId, worldId }</code></td>
+            <td><code>{ background, npcs[], destinyAnchors[] }</code></td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- 步骤3 -->
+  <div class="step">
+    <div class="step-head">
+      <div class="step-num">3</div>
+      <div class="step-title">引导事件</div>
+    </div>
+    <div class="step-body">
+      <p class="desc">生成故事后自动触发，Agent2 生成 2~3 个引导节点，玩家在每个节点做出选择，建立初始 NPC 关系与世界观认知。</p>
+      <table class="tb">
+        <thead><tr><th style="width:60px">方法</th><th style="width:260px">路径</th><th>说明</th><th>请求参数</th><th>返回数据</th></tr></thead>
+        <tbody>
+          <tr>
+            <td><span class="tag tag-post">POST</span></td>
+            <td class="path">/api/game/guide-events</td>
+            <td>生成引导事件（Agent2）</td>
+            <td><code>{ saveId }</code></td>
+            <td><code>{ nodes[{ id, type, text, choices[] }] }</code></td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- 步骤4 -->
+  <div class="step">
+    <div class="step-head">
+      <div class="step-num">4</div>
+      <div class="step-title">修炼流逝</div>
+    </div>
+    <div class="step-body">
+      <p class="desc">玩家在线时自动推进。后端通过 SSE 推送修炼日志，前端实时渲染文字滚动。每个"时间单位"自动消耗寿元、增加修为。</p>
+      <table class="tb">
+        <thead><tr><th style="width:60px">方法</th><th style="width:260px">路径</th><th>说明</th><th>请求参数</th><th>返回数据</th></tr></thead>
+        <tbody>
+          <tr>
+            <td><span class="tag tag-sse">SSE</span></td>
+            <td class="path">/api/game/stream/:saveId</td>
+            <td>修炼日志实时推送</td>
+            <td>—</td>
+            <td><code>event: log / node / status<br>data: { text } / { node } / { character }</code></td>
+          </tr>
+          <tr>
+            <td><span class="tag tag-get">GET</span></td>
+            <td class="path">/api/game/status/:saveId</td>
+            <td>获取当前游戏状态</td>
+            <td>—</td>
+            <td><code>{ character, realm, exp, age, maxAge, ... }</code></td>
+          </tr>
+          <tr>
+            <td><span class="tag tag-get">GET</span></td>
+            <td class="path">/api/game/log/:saveId</td>
+            <td>获取修炼日志（分页，用于历史回看）</td>
+            <td><code>{ cursor, size }</code></td>
+            <td><code>{ logs[], hasMore, cursor }</code></td>
+          </tr>
+        </tbody>
+      </table>
+      <div class="note note-info">
+        <strong>SSE 事件类型</strong>：<br>
+        <code>log</code> — 常规修炼日志文本<br>
+        <code>node</code> — 节点触发，含叙事文本和选项<br>
+        <code>status</code> — 状态变更推送（属性变化、境界提升等）
+      </div>
+    </div>
+  </div>
+
+  <!-- 步骤5 -->
+  <div class="step">
+    <div class="step-head">
+      <div class="step-num">5</div>
+      <div class="step-title">节点触发与处理</div>
+    </div>
+    <div class="step-body">
+      <p class="desc">修炼流逝到节点触发时机时，Agent2 生成节点内容（预生成 2~3 个，滚动更新）。玩家查看叙事文本并做出选择，后端计算状态变更。</p>
+      <table class="tb">
+        <thead><tr><th style="width:60px">方法</th><th style="width:260px">路径</th><th>说明</th><th>请求参数</th><th>返回数据</th></tr></thead>
+        <tbody>
+          <tr>
+            <td><span class="tag tag-post">POST</span></td>
+            <td class="path">/api/game/generate-node</td>
+            <td>生成下一批节点（Agent2，含预生成）</td>
+            <td><code>{ saveId }</code></td>
+            <td><code>{ nodes[{ id, type, subType, text, choices[] }] }</code></td>
+          </tr>
+          <tr>
+            <td><span class="tag tag-get">GET</span></td>
+            <td class="path">/api/game/node/:nodeId</td>
+            <td>获取节点详情</td>
+            <td>—</td>
+            <td><code>{ type, subType, text, choices[] }</code></td>
+          </tr>
+          <tr>
+            <td><span class="tag tag-post">POST</span></td>
+            <td class="path">/api/game/choose</td>
+            <td>玩家做出选择</td>
+            <td><code>{ saveId, nodeId, choiceIndex }</code></td>
+            <td><code>{ stateChanges, narrative, nextNodeId }</code></td>
+          </tr>
+          <tr>
+            <td><span class="tag tag-post">POST</span></td>
+            <td class="path">/api/game/battle-resolve</td>
+            <td>战斗结算（独立接口，概率判定 + Agent 描述）</td>
+            <td><code>{ saveId, nodeId, choiceIndex }</code></td>
+            <td><code>{ result(1~5), narrative, stateChanges, drops[] }</code></td>
+          </tr>
+          <tr>
+            <td><span class="tag tag-post">POST</span></td>
+            <td class="path">/api/game/retreat</td>
+            <td>主动闭关</td>
+            <td><code>{ saveId, duration }</code></td>
+            <td><code>{ stateChanges, narrative }</code></td>
+          </tr>
+        </tbody>
+      </table>
+      <div class="note note-info">
+        <strong>battle-resolve 与 choose 的关系</strong>：choose 为通用选择接口，适用于事件/奇遇/机缘等节点；战斗节点先走 choose 选择行动（迎战/逃跑等），再调用 battle-resolve 进行战斗判定与结果生成。两步分离便于前端展示战斗过程。
+      </div>
+    </div>
+  </div>
+
+  <!-- 步骤6 -->
+  <div class="step">
+    <div class="step-head">
+      <div class="step-num">6</div>
+      <div class="step-title">境界突破</div>
+    </div>
+    <div class="step-body">
+      <p class="desc">修为达到阈值后自动触发突破节点。金丹/元婴/化神/渡劫/大乘 突破时额外触发天劫节点，玩家选择渡劫方式，概率判定成败。</p>
+      <table class="tb">
+        <thead><tr><th style="width:60px">方法</th><th style="width:260px">路径</th><th>说明</th><th>请求参数</th><th>返回数据</th></tr></thead>
+        <tbody>
+          <tr>
+            <td><span class="tag tag-post">POST</span></td>
+            <td class="path">/api/game/breakthrough</td>
+            <td>触发境界突破判定</td>
+            <td><code>{ saveId }</code></td>
+            <td><code>{ success, newRealm, narrative, needTribulation }</code></td>
+          </tr>
+          <tr>
+            <td><span class="tag tag-post">POST</span></td>
+            <td class="path">/api/game/tribulation</td>
+            <td>天劫节点（选择渡劫方式 + 结算）</td>
+            <td><code>{ saveId, method: "prepared" | "force" | "external" }</code></td>
+            <td><code>{ result: "success" | "fail", narrative, stateChanges, realmChange? }</code></td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- 步骤7 -->
+  <div class="step">
+    <div class="step-head">
+      <div class="step-num">7</div>
+      <div class="step-title">飞升 / 跨界（双路径）</div>
+    </div>
+    <div class="step-body">
+      <p class="desc">
+        玩家可通过两种路径离开当前世界：<br>
+        <strong>路径 A 天地规则飞升</strong>：境界达到当前世界承载上限的<strong>巅峰</strong>（如化神大圆满），触发强制剧情节点，安全度高。<br>
+        <strong>路径 B 空间通道闯关</strong>：在游历/奇遇/机缘节点中发现空间通道后主动闯入，境界达到承载上限即可，但有概率受伤、丢宝、误入险地。
+      </p>
+      <table class="tb">
+        <thead><tr><th style="width:60px">方法</th><th style="width:260px">路径</th><th>说明</th><th>请求参数</th><th>返回数据</th></tr></thead>
+        <tbody>
+          <tr>
+            <td><span class="tag tag-post">POST</span></td>
+            <td class="path">/api/game/ascend-natural</td>
+            <td>路径 A：天地规则飞升判定</td>
+            <td><code>{ saveId }</code></td>
+            <td><code>{ result: "success" | "fail", narrative, stateChanges, worldId? }</code></td>
+          </tr>
+          <tr>
+            <td><span class="tag tag-post">POST</span></td>
+            <td class="path">/api/game/ascend-channel</td>
+            <td>路径 B：空间通道闯入</td>
+            <td><code>{ saveId, channelId }</code></td>
+            <td><code>{ result, narrative, stateChanges, lostProps[], injuries, worldId? }</code></td>
+          </tr>
+          <tr>
+            <td><span class="tag tag-post">POST</span></td>
+            <td class="path">/api/game/migrate-world</td>
+            <td>飞升成功后生成新世界大纲（Agent3，内部调用）</td>
+            <td><code>{ saveId, channelQuality? }</code></td>
+            <td><code>{ worldId, worldName, history, factions[], rules[] }</code></td>
+          </tr>
+          <tr>
+            <td><span class="tag tag-post">POST</span></td>
+            <td class="path">/api/game/migrate-story</td>
+            <td>飞升成功后生成过渡故事（Agent1，内部调用）</td>
+            <td><code>{ saveId, worldId, viaPath: "natural" | "channel" }</code></td>
+            <td><code>{ transitionNarrative, npcs[] }</code></td>
+          </tr>
+        </tbody>
+      </table>
+      <div class="note note-info">
+        <strong>关于空间通道的发现</strong>：通道由 Agent2 在生成游历/奇遇/机缘节点时按概率随机植入，发现后写入 <code>game_state.state.space_channels</code>。玩家可在任意时刻调用 <code>/api/game/ascend-channel</code> 主动闯入。
+      </div>
+    </div>
+  </div>
+
+  <!-- 步骤8 -->
+  <div class="step">
+    <div class="step-head">
+      <div class="step-num">8</div>
+      <div class="step-title">结局判定</div>
+    </div>
+    <div class="step-body">
+      <p class="desc">每次状态变更后自动检测结局条件（寿尽/战死/通关）。触发结局时由 Agent 生成结局叙事文本，计算星级评价，存档转为"已完结"状态。</p>
+      <table class="tb">
+        <thead><tr><th style="width:60px">方法</th><th style="width:260px">路径</th><th>说明</th><th>请求参数</th><th>返回数据</th></tr></thead>
+        <tbody>
+          <tr>
+            <td><span class="tag tag-post">POST</span></td>
+            <td class="path">/api/game/ending</td>
+            <td>结局判定与叙事生成</td>
+            <td><code>{ saveId }</code></td>
+            <td><code>{ type: "death" | "age" | "victory", narrative, rating, stats }</code></td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+</div><!-- /mod-card -->
+
+<!-- ==================== 模块四 ==================== -->
+<h2 id="s7-4">7.4 模块四：继续游戏</h2>
+<div class="mod-card">
+  <div class="mod-head">
+    <div class="mod-icon m4">📖</div>
+    <div>
+      <div class="mod-title">继续游戏模块</div>
+      <div class="mod-desc">选择已有存档恢复游戏状态，继续修仙之旅</div>
+    </div>
+  </div>
+
+  <div class="sub">
+    <div class="sub-title">4.1 存档选择</div>
+    <div class="sub-desc">展示用户所有未完结存档，含角色名、境界、年龄等摘要信息</div>
+  </div>
+  <div class="sub">
+    <div class="sub-title">4.2 恢复状态</div>
+    <div class="sub-desc">加载存档的完整结构化状态，恢复到上次离开的位置，重新建立 SSE 连接</div>
+  </div>
+  <div class="sub">
+    <div class="sub-title">4.3 故事回看</div>
+    <div class="sub-desc">进入游戏前可快速回看最近的叙事文本，衔接上下文</div>
+  </div>
+
+  <table class="tb">
+    <thead><tr><th style="width:60px">方法</th><th style="width:260px">路径</th><th>说明</th><th>请求参数</th><th>返回数据</th></tr></thead>
+    <tbody>
+      <tr>
+        <td><span class="tag tag-post">POST</span></td>
+        <td class="path">/api/game/resume/:saveId</td>
+        <td>恢复游戏，加载完整状态</td>
+        <td>—</td>
+        <td><code>{ character, state, world, npcs, recentLogs[] }</code></td>
+      </tr>
+      <tr>
+        <td><span class="tag tag-get">GET</span></td>
+        <td class="path">/api/game/story/:saveId</td>
+        <td>获取完整故事历史（分页）</td>
+        <td><code>{ cursor, size }</code></td>
+        <td><code>{ story[], hasMore, cursor }</code></td>
+      </tr>
+    </tbody>
+  </table>
+  <div class="note note-info">存档列表接口复用模块二的 <code>GET /api/user/saves</code>。</div>
+</div>
+
+<!-- ==================== 接口汇总 ==================== -->
+<h2 id="s7-5">7.5 接口汇总</h2>
+<div class="card">
+  <table class="tb">
+    <thead><tr><th>#</th><th>模块</th><th>方法</th><th>路径</th><th>说明</th></tr></thead>
+    <tbody>
+      <tr><td>1</td><td>鉴权</td><td><span class="tag tag-post">POST</span></td><td class="path">/api/auth/wx-login</td><td>微信登录</td></tr>
+      <tr><td>2</td><td>鉴权</td><td><span class="tag tag-post">POST</span></td><td class="path">/api/auth/ali-login</td><td>支付宝登录</td></tr>
+      <tr><td>3</td><td>鉴权</td><td><span class="tag tag-post">POST</span></td><td class="path">/api/auth/refresh</td><td>刷新 Token</td></tr>
+      <tr><td>4</td><td>个人</td><td><span class="tag tag-get">GET</span></td><td class="path">/api/user/profile</td><td>获取个人资料</td></tr>
+      <tr><td>5</td><td>个人</td><td><span class="tag tag-put">PUT</span></td><td class="path">/api/user/profile</td><td>修改个人资料</td></tr>
+      <tr><td>6</td><td>个人</td><td><span class="tag tag-get">GET</span></td><td class="path">/api/user/records</td><td>游戏记录列表</td></tr>
+      <tr><td>7</td><td>个人</td><td><span class="tag tag-get">GET</span></td><td class="path">/api/user/records/:id</td><td>单局游戏详情</td></tr>
+      <tr><td>8</td><td>个人</td><td><span class="tag tag-get">GET</span></td><td class="path">/api/user/saves</td><td>存档列表</td></tr>
+      <tr><td>9</td><td>个人</td><td><span class="tag tag-delete">DELETE</span></td><td class="path">/api/user/saves/:id</td><td>删除存档</td></tr>
+      <tr><td>10</td><td>游戏</td><td><span class="tag tag-post">POST</span></td><td class="path">/api/game/roll-character</td><td>随机生成角色</td></tr>
+      <tr><td>11</td><td>游戏</td><td><span class="tag tag-post">POST</span></td><td class="path">/api/game/confirm-character</td><td>确认角色</td></tr>
+      <tr><td>12</td><td>游戏</td><td><span class="tag tag-post">POST</span></td><td class="path">/api/game/generate-world</td><td>生成世界大纲（Agent3）</td></tr>
+      <tr><td>13</td><td>游戏</td><td><span class="tag tag-post">POST</span></td><td class="path">/api/game/generate-story</td><td>生成故事脉络（Agent1）</td></tr>
+      <tr><td>14</td><td>游戏</td><td><span class="tag tag-post">POST</span></td><td class="path">/api/game/guide-events</td><td>生成引导事件（Agent2）</td></tr>
+      <tr><td>15</td><td>游戏</td><td><span class="tag tag-sse">SSE</span></td><td class="path">/api/game/stream/:saveId</td><td>修炼日志实时推送</td></tr>
+      <tr><td>16</td><td>游戏</td><td><span class="tag tag-get">GET</span></td><td class="path">/api/game/status/:saveId</td><td>获取游戏状态</td></tr>
+      <tr><td>17</td><td>游戏</td><td><span class="tag tag-get">GET</span></td><td class="path">/api/game/log/:saveId</td><td>修炼日志（分页）</td></tr>
+      <tr><td>18</td><td>游戏</td><td><span class="tag tag-post">POST</span></td><td class="path">/api/game/generate-node</td><td>生成节点（Agent2）</td></tr>
+      <tr><td>19</td><td>游戏</td><td><span class="tag tag-get">GET</span></td><td class="path">/api/game/node/:nodeId</td><td>获取节点详情</td></tr>
+      <tr><td>20</td><td>游戏</td><td><span class="tag tag-post">POST</span></td><td class="path">/api/game/choose</td><td>玩家选择</td></tr>
+      <tr><td>21</td><td>游戏</td><td><span class="tag tag-post">POST</span></td><td class="path">/api/game/battle-resolve</td><td>战斗结算</td></tr>
+      <tr><td>22</td><td>游戏</td><td><span class="tag tag-post">POST</span></td><td class="path">/api/game/retreat</td><td>主动闭关</td></tr>
+      <tr><td>23</td><td>游戏</td><td><span class="tag tag-post">POST</span></td><td class="path">/api/game/breakthrough</td><td>境界突破</td></tr>
+      <tr><td>24</td><td>游戏</td><td><span class="tag tag-post">POST</span></td><td class="path">/api/game/tribulation</td><td>天劫节点</td></tr>
+      <tr><td>25</td><td>游戏</td><td><span class="tag tag-post">POST</span></td><td class="path">/api/game/ascend-natural</td><td>飞升路径 A（天地规则）</td></tr>
+      <tr><td>26</td><td>游戏</td><td><span class="tag tag-post">POST</span></td><td class="path">/api/game/ascend-channel</td><td>飞升路径 B（空间通道）</td></tr>
+      <tr><td>27</td><td>游戏</td><td><span class="tag tag-post">POST</span></td><td class="path">/api/game/migrate-world</td><td>飞升后生成新世界（内部）</td></tr>
+      <tr><td>28</td><td>游戏</td><td><span class="tag tag-post">POST</span></td><td class="path">/api/game/migrate-story</td><td>飞升后过渡故事（内部）</td></tr>
+      <tr><td>29</td><td>游戏</td><td><span class="tag tag-post">POST</span></td><td class="path">/api/game/ending</td><td>结局判定</td></tr>
+      <tr><td>30</td><td>继续</td><td><span class="tag tag-post">POST</span></td><td class="path">/api/game/resume/:saveId</td><td>恢复游戏</td></tr>
+      <tr><td>31</td><td>继续</td><td><span class="tag tag-get">GET</span></td><td class="path">/api/game/story/:saveId</td><td>完整故事历史</td></tr>
+    </tbody>
+  </table>
+</div>
+
+<!-- ==================== 边界规则 ==================== -->
+<h2 id="s7-6">7.6 边界规则与兜底策略</h2>
+<div class="card">
+  <table class="tb">
+    <thead><tr><th style="width:160px">主题</th><th>规则</th></tr></thead>
+    <tbody>
+      <tr>
+        <td>重投限制</td>
+        <td>
+          后端基于 Redis Key <code>roll:{userId}</code> 计数，TTL 24h。每次 <code>/api/game/roll-character</code> 调用 +1，达到 3 次后强制返回上一次结果，直至 24h 后或确认创角后清零。
+        </td>
+      </tr>
+      <tr>
+        <td>仅在线推进</td>
+        <td>
+          SSE 心跳 30s 一次。客户端断开后保留 60s 容忍窗口（处理切后台/网络抖动），超时则冻结时间线。重连后从最后一个推进点继续。
+        </td>
+      </tr>
+      <tr>
+        <td>多端互斥</td>
+        <td>
+          同一 <code>saveId</code> 同时只允许一个 SSE 连接。后开者顶替先开者，旧连接收到 <code>event: kicked</code> 后断开。前端提示"该存档已在其他设备登录"。
+        </td>
+      </tr>
+      <tr>
+        <td>Agent 失败兜底</td>
+        <td>
+          1. JSON 解析失败：自动重试 2 次（带"严格 JSON"提示词）；<br>
+          2. 仍失败：降级为 mock 模板（按当前境界返回保底节点）；<br>
+          3. Agent3 校验失败：最多重新生成 2 次，仍失败则放行并打"待校验"标记。
+        </td>
+      </tr>
+      <tr>
+        <td>战斗节点 choose 行为</td>
+        <td>
+          战斗节点的 <code>/api/game/choose</code> 仅回写 <code>chosenIndex</code>，<strong>不产生 stateChanges</strong>，narrative 字段返回过渡描述。真正的状态变更与战斗描述由 <code>/api/game/battle-resolve</code> 产生。
+        </td>
+      </tr>
+      <tr>
+        <td>预生成节点</td>
+        <td>
+          所有预生成的兄弟分支节点都落库（<code>node.is_pregenerated=1</code>），同一决策点的兄弟节点共享 <code>branch_group_id</code>。玩家选择后未选分支保留供后期回溯使用，<strong>不删除</strong>。
+        </td>
+      </tr>
+      <tr>
+        <td>飞升路径 B 风险结算</td>
+        <td>
+          <code>/api/game/ascend-channel</code> 按 <code>quality + danger</code> 综合判定结果：成功抵达 / 受伤抵达 / 失踪虚空（按 lostNodes 消耗寿元后回到原世界）/ 当场陨落。所有结果均产生叙事文本与 stateChanges。
+        </td>
+      </tr>
+      <tr>
+        <td>请求频控</td>
+        <td>
+          所有写接口（含 choose、ascend-* 等）在网关层按 <code>userId + saveId</code> 限流：1s 1 次。SSE 同时连接数全局限 1 万，按用户 token 复用。
+        </td>
+      </tr>
+    </tbody>
+  </table>
+</div>
+
+<hr class="hr">
+
+<!-- ============================================================ -->
+<h1 id="s8">八、技术架构</h1>
+
+<h2 id="s8-1">8.1 技术栈总览</h2>
+<table class="tb">
+  <thead><tr><th>层级</th><th>技术选型</th><th>说明</th></tr></thead>
+  <tbody>
+    <tr><td>前端</td><td>Taro 4.x + React (Hooks)</td><td>一套代码编译微信/支付宝双端</td></tr>
+    <tr><td>状态管理</td><td>Zustand / Jotai</td><td>轻量级跨页面数据同步</td></tr>
+    <tr><td>后端</td><td>NestJS (TypeScript)</td><td>结构清晰，Agent 模块易抽离</td></tr>
+    <tr><td>数据库</td><td>MySQL 8.0</td><td>用户数据、游戏状态、节点历史</td></tr>
+    <tr><td>缓存</td><td>Redis</td><td>游戏会话、Agent 上下文缓存、预生成节点</td></tr>
+    <tr><td>实时推送</td><td>SSE (Server-Sent Events)</td><td>修炼日志、节点触发、状态变更推送</td></tr>
+    <tr><td>AI 服务</td><td>大模型 API（待定）</td><td>三个 Agent 的底层模型</td></tr>
+    <tr><td>部署</td><td>Docker Compose + 云服务器</td><td>后端 + 数据库 + Redis 自托管</td></tr>
+    <tr><td>鉴权</td><td>微信/支付宝 OpenID 登录</td><td>仅记录 OpenID，无需手机号授权</td></tr>
+  </tbody>
+</table>
+
+<h2 id="s8-2">8.2 后端服务分层</h2>
+<div class="arch">前端（Taro）
+    ↓ HTTP / SSE
+NestJS API Gateway
+    ├── 游戏逻辑模块（角色、节点、战斗计算）
+    ├── Agent 模块（独立，可单独迁移 Python）
+    │     ├── Agent3 世界大纲 + 校验
+    │     ├── Agent1 故事生成
+    │     └── Agent2 节点生成
+    ├── SSE 推送模块（修炼日志、节点触发、状态变更）
+    └── 数据服务模块（MySQL + Redis）</div>
+<div class="note note-info">Agent 模块单独抽离：未来可用 Python 重写，不影响其他服务。</div>
+
+<h2 id="s8-3">8.3 数据库设计</h2>
+
+<h3>核心表</h3>
+<table class="tb">
+  <thead><tr><th>表名</th><th>用途</th><th>核心字段</th></tr></thead>
+  <tbody>
+    <tr>
+      <td><code>user</code></td>
+      <td>双端用户信息</td>
+      <td>id, wx_openid, ali_user_id, nickname, created_at</td>
+    </tr>
+    <tr>
+      <td><code>save</code></td>
+      <td>存档（多存档）</td>
+      <td>id, user_id, name, status(active/ended), created_at, updated_at</td>
+    </tr>
+    <tr>
+      <td><code>role</code></td>
+      <td>主角属性</td>
+      <td>id, save_id, name, jing, qi, shen, talent, wisdom, luck, realm, exp, age, max_age</td>
+    </tr>
+    <tr>
+      <td><code>world</code></td>
+      <td>世界大纲</td>
+      <td>id, save_id, name, history, factions(JSON), rules(JSON), world_type, status(current/past), seq</td>
+    </tr>
+    <tr>
+      <td><code>npc</code></td>
+      <td>NPC 信息</td>
+      <td>id, save_id, name, type, personality, affinity, status, metadata(JSON)</td>
+    </tr>
+    <tr>
+      <td><code>node</code></td>
+      <td>节点记录</td>
+      <td>id, save_id, realm, node_type, sub_type, text, choices(JSON), chosen_index, state_changes(JSON), is_pregenerated, branch_group_id, parent_node_id, created_at</td>
+    </tr>
+    <tr>
+      <td><code>prop</code></td>
+      <td>法宝/神通</td>
+      <td>id, save_id, name, prop_type(weapon/skill), level, affixes(JSON), stat_bonus(JSON), obtained_node_id, equipped</td>
+    </tr>
+    <tr>
+      <td><code>game_state</code></td>
+      <td>结构化状态</td>
+      <td>id, save_id, state(JSON), summary, summary_version, updated_at</td>
+    </tr>
+    <tr>
+      <td><code>space_channel</code></td>
+      <td>空间通道（飞升路径 B）</td>
+      <td>id, save_id, quality, danger, target_world_hint, discovered_node_id, used, created_at</td>
+    </tr>
+  </tbody>
+</table>
+<div class="note note-info">动态结构化状态（karma_debts、world_flags、npc_relations 等）使用 <code>game_state.state</code> 的 JSON 字段存储，避免频繁加列。</div>
+
+<h2 id="s8-4">8.4 数据模型定义</h2>
+
+<h3>Player 实体</h3>
+<pre>interface Player {
+  id: number;
+  saveId: number;
+  name: string;
+  realm: string;        // 当前境界
+  exp: number;          // 当前修为值
+  jing: number;         // 精（基础三维）
+  qi: number;           // 气（基础三维）
+  shen: number;         // 神（基础三维）
+  talent: number;       // 资质（软属性）
+  wisdom: number;       // 悟性（软属性）
+  luck: number;         // 气运（软属性）
+  age: number;          // 当前年龄
+  maxAge: number;       // 寿元上限
+}
+
+interface DerivedStats {
+  hp: number;           // 由 jing 派生
+  mp: number;           // 由 qi 派生
+  sp: number;           // 由 shen 派生
+}</pre>
+
+<h3>Node 实体</h3>
+<pre>interface GameNode {
+  id: string;
+  saveId: number;
+  realm: string;              // 触发时境界
+  nodeType: 'EVENT' | 'BATTLE' | 'WONDER' | 'KARMA'
+          | 'RETREAT' | 'FACTION' | 'TRIBULATION' | 'CAUSALITY';
+  subType: string;            // 子类型
+  text: string;               // 叙事文本
+  choices: Choice[];           // 选项列表
+  chosenIndex?: number;       // 玩家选择
+  stateChanges?: object;      // 状态变更
+  createdAt: Date;
+}
+
+interface Choice {
+  text: string;               // 选项文案
+  hint?: string;              // 选项提示
+  expectedEffects?: object;   // 预期影响（Agent 输出）
+}</pre>
+
+<h3>GameState 实体</h3>
+<pre>interface GameState {
+  id: number;
+  saveId: number;
+  state: {
+    baseAttrs: { jing: number; qi: number; shen: number };
+    derived:   { hp: number; mp: number; sp: number };
+    character: { realm: string; exp: number };
+    inventory: string[];
+    skills: string[];
+    npc_relations: Record&lt;string, { status: string; affinity: number }&gt;;
+    karma_debts: { event: string; triggered: boolean; delay_nodes: number }[];
+    world_flags: string[];
+    space_channels: SpaceChannel[];   // 已发现的空间通道
+  };
+  summary: string;            // 最近的故事摘要
+  summaryVersion: number;     // 摘要版本号（每5个节点更新一次）
+  updatedAt: Date;
+}
+
+interface SpaceChannel {
+  id: string;
+  quality: 'high' | 'mid' | 'low';   // 通道品质
+  danger: number;                    // 危险度 0~100
+  targetWorldHint: string;           // 暗示目的地（"灵界核心区"等）
+  discoveredNodeId: string;          // 来源节点
+  used: boolean;
+}</pre>
+
+<hr class="hr">
+
+<!-- ============================================================ -->
+<h1 id="s9">九、MVP 功能清单</h1>
+
+<h3><span class="tag tag-core">必做</span> 核心体验</h3>
+<table class="tb">
+  <thead><tr><th>#</th><th>功能</th><th>说明</th></tr></thead>
+  <tbody>
+    <tr><td>1</td><td>双端鉴权</td><td>微信/支付宝登录，JWT 签发</td></tr>
+    <tr><td>2</td><td>个人管理</td><td>改名、查看记录、多存档管理</td></tr>
+    <tr><td>3</td><td>角色创建</td><td>初始属性随机生成，确认/重投（限3次）</td></tr>
+    <tr><td>4</td><td>主界面</td><td>属性面板 + 叙事流文字滚动展示</td></tr>
+    <tr><td>5</td><td>SSE 实时推送</td><td>修炼日志、节点触发、状态变更</td></tr>
+    <tr><td>6</td><td>四类核心节点</td><td>事件 / 战斗 / 奇遇 / 机缘</td></tr>
+    <tr><td>7</td><td>天劫节点</td><td>金丹、元婴、化神、渡劫、大乘各一次</td></tr>
+    <tr><td>8</td><td>战斗结算</td><td>独立接口，概率判定 + Agent 描述，五档结果</td></tr>
+    <tr><td>9</td><td>三个 Agent</td><td>大纲 Agent（校验层）/ 故事 Agent / 节点 Agent</td></tr>
+    <tr><td>10</td><td>一致性方案</td><td>结构化状态管理 + 摘要压缩</td></tr>
+    <tr><td>11</td><td>三种结局</td><td>通关（大乘）/ 战死 / 寿尽</td></tr>
+    <tr><td>12</td><td>世界迁移</td><td>化神后两步迁移至灵界</td></tr>
+    <tr><td>13</td><td>Taro 双端适配</td><td>微信 + 支付宝小程序</td></tr>
+    <tr><td>14</td><td>流式输出 + 预生成</td><td>叙事文本流式，选项预生成缓存</td></tr>
+    <tr><td>15</td><td>继续游戏</td><td>恢复存档，故事回看，重建 SSE</td></tr>
+  </tbody>
+</table>
+
+<h3><span class="tag tag-ext">建议做</span> 体验加分</h3>
+<table class="tb">
+  <thead><tr><th>#</th><th>功能</th><th>说明</th></tr></thead>
+  <tbody>
+    <tr><td>1</td><td>闭关节点</td><td>给玩家主动掌控感</td></tr>
+    <tr><td>2</td><td>因果节点</td><td>让选择真正有意义</td></tr>
+    <tr><td>3</td><td>宗门/势力节点</td><td>增加世界背景深度</td></tr>
+  </tbody>
+</table>
+
+<h3><span class="tag tag-defer">初版不做</span> 留后期</h3>
+<ul>
+  <li>地仙界</li>
+  <li>真仙及以上境界</li>
+  <li>多人 / 社交功能</li>
+  <li>法宝 / 神通精细化图鉴</li>
+  <li>回溯功能（依赖一致性方案成熟后实现）</li>
+</ul>
+
+<hr class="hr">
+
+<!-- ============================================================ -->
+<h1 id="s10">十、开发路线图</h1>
+
+<table class="tb">
+  <thead><tr><th>阶段</th><th>目标</th><th>交付内容</th></tr></thead>
+  <tbody>
+    <tr>
+      <td><strong>V0.5 Demo</strong></td>
+      <td>纯前端验证叙事流</td>
+      <td>Mock 数据跑通"创角 → 挂机流逝 → 突破筑基"的 UI 交互，SSE 用 Mock 模拟</td>
+    </tr>
+    <tr>
+      <td><strong>V1.0 全栈 MVP</strong></td>
+      <td>后端上线，双端发布</td>
+      <td>NestJS 后端、MySQL 持久化、SSE 推送、仅在线挂机逻辑。AI 用 Mock 替代</td>
+    </tr>
+    <tr>
+      <td><strong>V1.5 Agent 接入</strong></td>
+      <td>大模型集成</td>
+      <td>接入 Agent1/2/3，替换创角/节点/突破/迁移处的 Mock 逻辑，实现结构化状态 + 摘要压缩</td>
+    </tr>
+    <tr>
+      <td><strong>V1.8 体验打磨</strong></td>
+      <td>流式 + 预生成 + 双端优化</td>
+      <td>流式文本输出、选项预生成缓存、双端适配细节、战斗结算分步展示</td>
+    </tr>
+  </tbody>
+</table>
+
+<hr class="hr">
+
+<!-- ============================================================ -->
+<h1 id="s11">十一、后期版本规划</h1>
+
+<table class="tb">
+  <thead><tr><th>版本</th><th>核心目标</th></tr></thead>
+  <tbody>
+    <tr><td>v1.1</td><td>地仙界支线、真仙 ~ 大罗境界</td></tr>
+    <tr><td>v1.2</td><td>多周目继承（前世记忆 / 因果轮回）</td></tr>
+    <tr><td>v1.3</td><td>社交 / 排行（好友转世对比、天骄榜）</td></tr>
+    <tr><td>v1.4</td><td>回溯功能 + 故事网图可视化</td></tr>
+    <tr><td>v2.0</td><td>万界世界观完整实现（多世界切换）</td></tr>
+    <tr><td>重构</td><td>Agent 服务迁移 Python，引入 RAG 向量检索增强一致性</td></tr>
+  </tbody>
+</table>
+
+<hr class="hr">
+
+<p style="text-align:center;color:var(--dim);font-size:13px;margin-top:48px;">
+  《文字修仙》产品需求文档 v1.1 · 2026-05 · 已确认
+</p>
+
+</div>
+</body>
+</html>
