@@ -1,0 +1,65 @@
+.narrative-flow {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  cursor: pointer;
+}
+
+.narrative-entry {
+  padding: 12px 16px;
+  border-radius: var(--radius);
+  font-size: 14.5px;
+  line-height: 1.9;
+}
+
+.narrative-entry p {
+  margin: 0;
+}
+
+.narrative-log {
+  color: var(--dim);
+  font-size: 13px;
+  border-left: 2px solid var(--border);
+  padding-left: 12px;
+}
+
+.narrative-node {
+  background: var(--card);
+  border: 1px solid var(--border);
+}
+
+.narrative-choice {
+  padding: 8px 16px;
+}
+
+.choice-record {
+  color: var(--accent2);
+  font-size: 13px;
+  font-style: italic;
+}
+
+.narrative-battle {
+  background: rgba(239, 91, 91, 0.05);
+  border: 1px solid rgba(239, 91, 91, 0.2);
+}
+
+.narrative-breakthrough {
+  background: rgba(123, 108, 246, 0.08);
+  border: 1px solid rgba(123, 108, 246, 0.3);
+  color: var(--accent);
+  font-weight: 500;
+  animation: glow 2s ease infinite;
+}
+
+.narrative-ending {
+  background: rgba(78, 203, 141, 0.08);
+  border: 1px solid rgba(78, 203, 141, 0.3);
+  font-size: 15px;
+  line-height: 2;
+}
+
+.typing-cursor {
+  animation: pulse 0.8s infinite;
+  color: var(--accent);
+  font-weight: 300;
+}

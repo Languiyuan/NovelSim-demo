@@ -1,0 +1,95 @@
+.attr-panel {
+  position: sticky;
+  top: 0;
+  z-index: 10;
+  background: var(--card);
+  border-bottom: 1px solid var(--border);
+  padding: 12px 16px;
+  border-radius: 0 0 var(--radius) var(--radius);
+}
+
+.attr-panel-top {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 8px;
+}
+
+.character-info {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.character-name {
+  font-size: 16px;
+  font-weight: 700;
+}
+
+.realm-badge {
+  font-size: 11px;
+  padding: 2px 8px;
+  border-radius: 4px;
+  background: rgba(123, 108, 246, 0.15);
+  color: var(--accent);
+  font-weight: 600;
+}
+
+.age-info {
+  font-size: 12px;
+  color: var(--dim);
+}
+
+.age-text {
+  font-family: "SF Mono", "Fira Code", monospace;
+}
+
+.age-bar-container {
+  height: 3px;
+  background: var(--surface);
+  border-radius: 2px;
+  margin-bottom: 10px;
+  overflow: hidden;
+}
+
+.age-bar {
+  height: 100%;
+  background: linear-gradient(90deg, var(--green), var(--orange), var(--red));
+  border-radius: 2px;
+  transition: width 0.5s ease;
+}
+
+.stats-row {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.stat-item {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.stat-label {
+  font-size: 11px;
+  color: var(--dim);
+}
+
+.stat-value {
+  font-size: 13px;
+  font-weight: 600;
+  font-family: "SF Mono", "Fira Code", monospace;
+}
+
+.stat-jing .stat-value { color: var(--orange); }
+.stat-qi .stat-value { color: var(--green); }
+.stat-shen .stat-value { color: var(--accent2); }
+.stat-exp .stat-value { color: var(--cyan); }
+.stat-luck .stat-value { color: var(--pink); }
+
+.stat-divider {
+  width: 1px;
+  height: 16px;
+  background: var(--border);
+}

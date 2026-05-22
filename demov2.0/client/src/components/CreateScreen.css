@@ -1,0 +1,125 @@
+.create-screen {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+}
+
+.create-content {
+  max-width: 460px;
+  width: 100%;
+  text-align: center;
+}
+
+.create-title {
+  font-size: 24px;
+  color: var(--accent);
+  margin-bottom: 8px;
+}
+
+.create-hint {
+  color: var(--dim);
+  font-size: 13px;
+  margin-bottom: 24px;
+}
+
+.roll-card {
+  padding: 28px;
+  margin-bottom: 24px;
+  animation: fadeIn 0.5s ease;
+}
+
+.roll-name {
+  font-size: 22px;
+  font-weight: 700;
+  margin-bottom: 4px;
+}
+
+.roll-grade {
+  font-size: 13px;
+  color: var(--accent);
+  margin-bottom: 24px;
+  padding: 2px 12px;
+  display: inline-block;
+  background: rgba(123, 108, 246, 0.1);
+  border-radius: 4px;
+}
+
+.attrs-grid {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin-bottom: 20px;
+}
+
+.attr-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.attr-label {
+  font-size: 14px;
+  font-weight: 600;
+  width: 24px;
+  color: var(--dim);
+}
+
+.attr-bar {
+  flex: 1;
+  height: 8px;
+  background: var(--surface);
+  border-radius: 4px;
+  overflow: hidden;
+}
+
+.attr-fill {
+  height: 100%;
+  border-radius: 4px;
+  transition: width 0.6s ease;
+}
+
+.attr-fill.jing { background: linear-gradient(90deg, var(--red), var(--orange)); }
+.attr-fill.qi { background: linear-gradient(90deg, var(--green), var(--cyan)); }
+.attr-fill.shen { background: linear-gradient(90deg, var(--accent), var(--accent2)); }
+
+.attr-value {
+  font-size: 14px;
+  font-weight: 600;
+  width: 32px;
+  text-align: right;
+  font-family: "SF Mono", "Fira Code", monospace;
+}
+
+.soft-attrs {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+  padding-top: 16px;
+  border-top: 1px solid var(--border);
+}
+
+.soft-item {
+  display: flex;
+  justify-content: space-between;
+  padding: 4px 8px;
+}
+
+.soft-label {
+  color: var(--dim);
+  font-size: 13px;
+}
+
+.soft-value {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--accent2);
+  font-family: "SF Mono", "Fira Code", monospace;
+}
+
+.create-actions {
+  display: flex;
+  gap: 16px;
+  justify-content: center;
+}
