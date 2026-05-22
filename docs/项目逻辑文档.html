@@ -1,0 +1,1114 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>NoverSim2 · 文字修仙 项目逻辑文档</title>
+  <!-- Mermaid.js for diagrams -->
+  <script src="https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.min.js"></script>
+  <style>
+    :root {
+      --bg: #0d1117;
+      --surface: #161b22;
+      --surface2: #21262d;
+      --border: #30363d;
+      --accent: #58a6ff;
+      --accent2: #3fb950;
+      --accent3: #d2a679;
+      --accent4: #bc8cff;
+      --text: #e6edf3;
+      --text-muted: #8b949e;
+      --toc-w: 270px;
+      --radius: 8px;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: 'Segoe UI', system-ui, sans-serif;
+      font-size: 15px;
+      line-height: 1.7;
+    }
+
+    /* ── TOC ── */
+    .toc {
+      position: fixed;
+      top: 0; left: 0;
+      width: var(--toc-w);
+      height: 100vh;
+      overflow-y: auto;
+      background: var(--surface);
+      border-right: 1px solid var(--border);
+      padding: 28px 0 40px;
+      z-index: 100;
+    }
+
+    .toc-title {
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: .1em;
+      text-transform: uppercase;
+      color: var(--text-muted);
+      padding: 0 20px 12px;
+      border-bottom: 1px solid var(--border);
+      margin-bottom: 10px;
+    }
+
+    .toc a {
+      display: block;
+      padding: 5px 20px;
+      color: var(--text-muted);
+      text-decoration: none;
+      font-size: 13px;
+      border-left: 2px solid transparent;
+      transition: all .15s;
+    }
+    .toc a:hover { color: var(--text); background: var(--surface2); }
+    .toc a.active { color: var(--accent); border-left-color: var(--accent); background: rgba(88,166,255,.06); }
+    .toc a.l2 { padding-left: 32px; font-size: 12.5px; }
+    .toc a.l3 { padding-left: 46px; font-size: 12px; }
+
+    /* ── Page ── */
+    .page {
+      margin-left: var(--toc-w);
+      max-width: 900px;
+      padding: 48px 60px 80px;
+    }
+
+    /* ── Hero ── */
+    .hero {
+      padding: 40px 0 36px;
+      border-bottom: 1px solid var(--border);
+      margin-bottom: 48px;
+    }
+    .hero-badge {
+      display: inline-block;
+      background: rgba(88,166,255,.12);
+      color: var(--accent);
+      border: 1px solid rgba(88,166,255,.3);
+      border-radius: 20px;
+      font-size: 12px;
+      padding: 3px 12px;
+      margin-bottom: 14px;
+    }
+    .hero h1 {
+      font-size: 32px;
+      font-weight: 700;
+      color: var(--text);
+      margin-bottom: 10px;
+    }
+    .hero p { color: var(--text-muted); max-width: 600px; }
+
+    .tag-row { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 18px; }
+    .tag {
+      display: inline-flex; align-items: center; gap: 5px;
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      padding: 4px 10px;
+      font-size: 12px;
+      color: var(--text-muted);
+    }
+    .tag .dot {
+      width: 7px; height: 7px; border-radius: 50%;
+      display: inline-block;
+    }
+
+    /* ── Sections ── */
+    section { margin-bottom: 60px; }
+
+    h2 {
+      font-size: 22px;
+      font-weight: 700;
+      color: var(--text);
+      padding-bottom: 10px;
+      border-bottom: 1px solid var(--border);
+      margin-bottom: 24px;
+      scroll-margin-top: 20px;
+    }
+    h3 {
+      font-size: 16px;
+      font-weight: 600;
+      color: var(--accent3);
+      margin: 28px 0 12px;
+      scroll-margin-top: 20px;
+    }
+    h4 {
+      font-size: 14px;
+      font-weight: 600;
+      color: var(--text-muted);
+      margin: 20px 0 8px;
+      scroll-margin-top: 20px;
+    }
+
+    p { margin-bottom: 12px; color: var(--text); }
+
+    /* ── Cards ── */
+    .card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 20px 24px;
+      margin-bottom: 16px;
+    }
+    .card-title {
+      font-weight: 600;
+      color: var(--accent);
+      margin-bottom: 8px;
+      font-size: 14px;
+    }
+    .card p { margin: 0; font-size: 13.5px; color: var(--text-muted); }
+
+    /* ── Grid ── */
+    .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; margin-bottom: 16px; }
+    .grid-3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 14px; margin-bottom: 16px; }
+
+    /* ── Table ── */
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 13.5px;
+      margin-bottom: 20px;
+    }
+    th {
+      background: var(--surface2);
+      color: var(--text-muted);
+      font-weight: 600;
+      text-align: left;
+      padding: 10px 14px;
+      border: 1px solid var(--border);
+    }
+    td {
+      padding: 9px 14px;
+      border: 1px solid var(--border);
+      color: var(--text);
+      vertical-align: top;
+    }
+    tr:hover td { background: rgba(255,255,255,.02); }
+
+    /* ── Code ── */
+    code {
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      border-radius: 4px;
+      padding: 1px 6px;
+      font-family: 'Cascadia Code', 'Fira Code', Consolas, monospace;
+      font-size: 13px;
+      color: var(--accent3);
+    }
+    pre {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 18px 20px;
+      overflow-x: auto;
+      margin-bottom: 16px;
+    }
+    pre code {
+      background: none;
+      border: none;
+      padding: 0;
+      font-size: 13px;
+      color: var(--accent2);
+    }
+
+    /* ── Callout ── */
+    .callout {
+      border-left: 3px solid var(--accent);
+      background: rgba(88,166,255,.06);
+      padding: 14px 18px;
+      border-radius: 0 var(--radius) var(--radius) 0;
+      margin-bottom: 16px;
+      font-size: 13.5px;
+    }
+    .callout.warn { border-color: var(--accent3); background: rgba(210,166,121,.06); }
+    .callout.success { border-color: var(--accent2); background: rgba(63,185,80,.06); }
+    .callout strong { display: block; margin-bottom: 4px; }
+
+    /* ── Diagram container ── */
+    .diagram {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 28px 24px;
+      margin: 16px 0 24px;
+      overflow-x: auto;
+    }
+    .diagram-title {
+      font-size: 12px;
+      color: var(--text-muted);
+      font-weight: 600;
+      letter-spacing: .05em;
+      text-transform: uppercase;
+      margin-bottom: 16px;
+    }
+
+    /* ── Phase badges ── */
+    .phase-badges { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 16px; }
+    .phase-badge {
+      padding: 4px 12px;
+      border-radius: 20px;
+      font-size: 12px;
+      font-weight: 600;
+      border: 1px solid;
+    }
+    .pb-intro { color: #79c0ff; border-color: rgba(121,192,255,.4); background: rgba(121,192,255,.08); }
+    .pb-early { color: #3fb950; border-color: rgba(63,185,80,.4); background: rgba(63,185,80,.08); }
+    .pb-mid   { color: #d29922; border-color: rgba(210,153,34,.4); background: rgba(210,153,34,.08); }
+    .pb-late  { color: #f85149; border-color: rgba(248,81,73,.4); background: rgba(248,81,73,.08); }
+    .pb-ending{ color: #bc8cff; border-color: rgba(188,140,255,.4); background: rgba(188,140,255,.08); }
+
+    /* ── API block ── */
+    .api-block {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      overflow: hidden;
+      margin-bottom: 20px;
+    }
+    .api-header {
+      display: flex; align-items: center; gap: 10px;
+      padding: 12px 18px;
+      background: var(--surface2);
+      border-bottom: 1px solid var(--border);
+    }
+    .api-method {
+      font-size: 12px; font-weight: 700; padding: 3px 8px;
+      border-radius: 4px; font-family: monospace;
+    }
+    .m-post { background: rgba(63,185,80,.15); color: #3fb950; }
+    .m-get  { background: rgba(88,166,255,.15); color: #58a6ff; }
+    .api-path { font-family: monospace; font-size: 13px; color: var(--text); }
+    .api-desc { margin-left: auto; font-size: 12px; color: var(--text-muted); }
+    .api-body { padding: 14px 18px; }
+
+    /* ── Mermaid theme overrides ── */
+    .mermaid { font-family: 'Segoe UI', sans-serif; }
+
+    /* ── Scrollbar ── */
+    ::-webkit-scrollbar { width: 6px; height: 6px; }
+    ::-webkit-scrollbar-track { background: transparent; }
+    ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
+
+    /* ── Responsive ── */
+    @media (max-width: 768px) {
+      .toc { position: static; width: 100%; height: auto; border-right: none; border-bottom: 1px solid var(--border); }
+      .page { margin-left: 0; padding: 24px 20px 60px; }
+      .grid-2, .grid-3 { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+<body>
+
+<!-- TOC -->
+<nav class="toc" id="toc">
+  <div class="toc-title">目录</div>
+  <a href="#overview" class="l1">1. 项目概述</a>
+  <a href="#tech-stack" class="l1">2. 技术栈</a>
+  <a href="#arch" class="l1">3. 整体架构</a>
+  <a href="#dir" class="l1">4. 目录结构</a>
+  <a href="#frontend" class="l1">5. 前端逻辑</a>
+  <a href="#fe-state" class="l2">5.1 状态管理</a>
+  <a href="#fe-flow" class="l2">5.2 页面流转</a>
+  <a href="#fe-components" class="l2">5.3 组件说明</a>
+  <a href="#backend" class="l1">6. 后端逻辑</a>
+  <a href="#be-api" class="l2">6.1 API 接口</a>
+  <a href="#be-service" class="l2">6.2 GameService</a>
+  <a href="#be-phase" class="l2">6.3 剧情阶段</a>
+  <a href="#be-db" class="l2">6.4 数据库模型</a>
+  <a href="#ai-layer" class="l1">7. AI 层</a>
+  <a href="#ai-provider" class="l2">7.1 Provider</a>
+  <a href="#ai-prompt" class="l2">7.2 Prompt 结构</a>
+  <a href="#ai-response" class="l2">7.3 响应格式</a>
+  <a href="#sequence" class="l1">8. 核心时序图</a>
+  <a href="#seq-start" class="l2">8.1 开始游戏</a>
+  <a href="#seq-next" class="l2">8.2 继续叙事</a>
+  <a href="#seq-choose" class="l2">8.3 选择节点</a>
+  <a href="#game-flow" class="l1">9. 游戏流程图</a>
+  <a href="#node-types" class="l1">10. 节点 & 结局</a>
+  <a href="#deploy" class="l1">11. 部署说明</a>
+</nav>
+
+<!-- Main -->
+<main class="page">
+
+  <!-- Hero -->
+  <div class="hero">
+    <div class="hero-badge">项目逻辑文档 v1.0</div>
+    <h1>文字修仙 · NoverSim2</h1>
+    <p>AI 驱动的轻量级修仙叙事游戏，全栈技术逻辑说明文档</p>
+    <div class="tag-row">
+      <span class="tag"><span class="dot" style="background:#58a6ff"></span>React 18</span>
+      <span class="tag"><span class="dot" style="background:#3fb950"></span>NestJS</span>
+      <span class="tag"><span class="dot" style="background:#d2a679"></span>MySQL</span>
+      <span class="tag"><span class="dot" style="background:#bc8cff"></span>Docker</span>
+      <span class="tag"><span class="dot" style="background:#f85149"></span>AI Narrative</span>
+    </div>
+  </div>
+
+  <!-- 1. 项目概述 -->
+  <section id="overview">
+    <h2>1. 项目概述</h2>
+    <p>
+      <strong>文字修仙</strong> 是一款轻量级 AI 叙事游戏 Demo。世界观固定为凡界修仙背景，
+      主角固定为练气中期散修<strong>李青云</strong>。玩家通过"继续"按钮推进剧情，
+      在关键节点做出选择，最终走向飞升、陨落或寿尽三种结局之一。
+    </p>
+    <div class="grid-2">
+      <div class="card">
+        <div class="card-title">核心游戏循环</div>
+        <p>开始游戏 → AI 生成剧情 → 点击继续 → 触发决策节点 → 玩家选择 → AI 根据选择续写 → 走向结局</p>
+      </div>
+      <div class="card">
+        <div class="card-title">设计理念</div>
+        <p>极简架构：仅 4 个 API 接口、2 张数据表。摒弃数值系统与复杂 Agent，专注于叙事体验。</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- 2. 技术栈 -->
+  <section id="tech-stack">
+    <h2>2. 技术栈</h2>
+    <table>
+      <tr><th>层级</th><th>技术</th><th>用途</th></tr>
+      <tr><td>前端</td><td>React 18 + TypeScript + Vite</td><td>游戏 UI、状态管理、API 调用</td></tr>
+      <tr><td>后端</td><td>NestJS + TypeScript</td><td>REST API、业务逻辑、AI 调度</td></tr>
+      <tr><td>数据库</td><td>MySQL 8</td><td>会话持久化、故事节点存储</td></tr>
+      <tr><td>ORM</td><td>TypeORM</td><td>数据库实体映射与操作</td></tr>
+      <tr><td>AI 层</td><td>OpenAI Compatible API / Mock</td><td>叙事生成、节点触发、结局判断</td></tr>
+      <tr><td>运行时</td><td>Docker + Docker Compose</td><td>容器化编排，3 个服务</td></tr>
+    </table>
+  </section>
+
+  <!-- 3. 整体架构 -->
+  <section id="arch">
+    <h2>3. 整体架构</h2>
+    <div class="diagram">
+      <div class="diagram-title">系统架构图</div>
+      <div class="mermaid">
+graph LR
+    subgraph Browser["浏览器 :5173"]
+        A[React App\nApp.tsx]
+        A --> B[useGameState\nhook]
+        B --> C[api.ts\nfetch]
+    end
+
+    subgraph Backend["NestJS 后端 :9999"]
+        D[GameController\n/api/game]
+        D --> E[GameService]
+        E --> F[AiService]
+        E --> G[TypeORM]
+    end
+
+    subgraph AI["AI 层"]
+        H{AI Provider}
+        H -->|mock| I[MockProvider]
+        H -->|openai-compatible| J[OpenAI API]
+    end
+
+    subgraph DB["MySQL :3306"]
+        K[(game_session)]
+        L[(story_node)]
+    end
+
+    C -->|HTTP POST/GET| D
+    F --> H
+    G --> K
+    G --> L
+
+    style Browser fill:#161b22,stroke:#30363d,color:#e6edf3
+    style Backend fill:#161b22,stroke:#30363d,color:#e6edf3
+    style AI fill:#161b22,stroke:#30363d,color:#e6edf3
+    style DB fill:#161b22,stroke:#30363d,color:#e6edf3
+      </div>
+    </div>
+  </section>
+
+  <!-- 4. 目录结构 -->
+  <section id="dir">
+    <h2>4. 目录结构</h2>
+    <div class="grid-2">
+      <div>
+        <h4>前端 client/src/</h4>
+        <pre><code>src/
+├── App.tsx              # 根组件 / 页面路由
+├── main.tsx             # 入口
+├── components/
+│   ├── StatusBar        # 角色状态栏
+│   ├── NarrativeArea    # 叙事文本区域
+│   ├── ActionPanel      # 操作面板（继续/选择）
+│   ├── ChoiceButton     # 单个选项按钮
+│   ├── EndingScreen     # 结局展示
+│   ├── LoadingIndicator # 加载动画
+│   └── TypewriterText   # 打字机效果
+├── hooks/
+│   ├── useGameState     # 全局游戏状态
+│   └── useTypewriter    # 打字机逻辑
+├── services/
+│   └── api.ts           # HTTP 请求封装
+└── types/
+    └── game.types.ts    # 全局类型定义</code></pre>
+      </div>
+      <div>
+        <h4>后端 server/src/</h4>
+        <pre><code>src/
+├── main.ts              # NestJS 入口
+├── app.module.ts        # 根模块
+├── game/
+│   ├── game.controller  # 路由定义
+│   ├── game.service     # 核心业务逻辑
+│   ├── dto/             # 请求数据校验
+│   └── entities/        # 数据库实体
+├── ai/
+│   ├── ai.service       # AI 调度器
+│   ├── ai-provider...   # Provider 接口
+│   ├── providers/
+│   │   ├── mock         # Mock 测试 Provider
+│   │   └── openai-...   # OpenAI 兼容 Provider
+│   └── prompts/
+│       ├── system-prompt # System 提示词
+│       ├── narrative     # 叙事提示词
+│       └── ending        # 结局提示词
+├── shared/
+│   └── constants.ts     # 世界观/角色常量
+└── config/
+    └── database.config  # TypeORM 配置</code></pre>
+      </div>
+    </div>
+  </section>
+
+  <!-- 5. 前端逻辑 -->
+  <section id="frontend">
+    <h2>5. 前端逻辑</h2>
+
+    <h3 id="fe-state">5.1 状态管理（useGameState）</h3>
+    <p>
+      全局状态通过 <code>useReducer</code> 管理，集中在 <code>useGameState.ts</code> Hook 中。
+      所有 API 调用均封装为 Hook 方法，组件只调用 Hook，不直接操作 <code>api.ts</code>。
+    </p>
+
+    <h4>GameState 结构</h4>
+    <table>
+      <tr><th>字段</th><th>类型</th><th>说明</th></tr>
+      <tr><td><code>phase</code></td><td><code>'idle' | 'playing' | 'ended'</code></td><td>游戏阶段（控制页面渲染）</td></tr>
+      <tr><td><code>character</code></td><td><code>GameCharacter | null</code></td><td>当前角色信息</td></tr>
+      <tr><td><code>worldIntro</code></td><td><code>string</code></td><td>世界观介绍文本</td></tr>
+      <tr><td><code>storyPhase</code></td><td><code>string</code></td><td>当前剧情阶段（intro/early/mid/late）</td></tr>
+      <tr><td><code>narrativeHistory</code></td><td><code>Array</code></td><td>叙事历史列表（用于渲染和传递给 API）</td></tr>
+      <tr><td><code>currentNode</code></td><td><code>GameNode | null</code></td><td>当前待选择节点，null 时显示继续按钮</td></tr>
+      <tr><td><code>ending</code></td><td><code>GameEnding | null</code></td><td>结局数据，触发时渲染结局页</td></tr>
+      <tr><td><code>isLoading</code></td><td><code>boolean</code></td><td>加载状态（禁用操作）</td></tr>
+      <tr><td><code>isTyping</code></td><td><code>boolean</code></td><td>打字机动画进行中（禁用操作）</td></tr>
+    </table>
+
+    <h4>Action 类型</h4>
+    <div class="diagram">
+      <div class="diagram-title">GameReducer 状态转换</div>
+      <div class="mermaid">
+stateDiagram-v2
+    [*] --> idle: 初始状态
+    idle --> idle: LOADING_START
+    idle --> playing: GAME_STARTED
+    playing --> playing: NARRATIVE_RECEIVED
+    playing --> playing: NODE_TRIGGERED
+    playing --> playing: TYPING_COMPLETE
+    playing --> playing: SET_PHASE
+    playing --> ended: ENDING_REACHED
+    ended --> idle: RESET
+    playing --> idle: RESET
+      </div>
+    </div>
+
+    <h3 id="fe-flow">5.2 页面流转</h3>
+    <div class="diagram">
+      <div class="diagram-title">前端页面渲染逻辑</div>
+      <div class="mermaid">
+flowchart TD
+    A[App.tsx] --> B{state.phase}
+    B -->|idle| C[开始页\n&lt;StartScreen&gt;]
+    B -->|playing| D[游戏页]
+    B -->|ended| D
+
+    D --> E[StatusBar\n角色状态栏]
+    D --> F[NarrativeArea\n叙事文本区]
+    D --> G{state.phase}
+    G -->|ended| H[EndingScreen\n结局画面]
+    G -->|playing| I{currentNode?}
+    I -->|有节点| J[ActionPanel\n显示选项按钮]
+    I -->|无节点| K[ActionPanel\n显示继续按钮]
+      </div>
+    </div>
+
+    <h3 id="fe-components">5.3 组件说明</h3>
+    <div class="grid-2">
+      <div class="card">
+        <div class="card-title">StatusBar</div>
+        <p>展示角色名（李青云）、境界（练气中期）、当前剧情阶段标签。</p>
+      </div>
+      <div class="card">
+        <div class="card-title">NarrativeArea</div>
+        <p>遍历 <code>narrativeHistory</code> 渲染所有叙事段落，最新段落使用 TypewriterText 组件呈现打字机效果。</p>
+      </div>
+      <div class="card">
+        <div class="card-title">ActionPanel</div>
+        <p>无节点时渲染"继续"按钮触发 <code>continueStory()</code>；有节点时渲染多个 ChoiceButton，点击触发 <code>makeChoice(nodeId, index)</code>。</p>
+      </div>
+      <div class="card">
+        <div class="card-title">EndingScreen</div>
+        <p>展示结局类型（飞升/陨落/寿尽）、结局叙事和一句话命运总结，提供"重新修行"按钮调用 <code>resetGame()</code>。</p>
+      </div>
+      <div class="card">
+        <div class="card-title">TypewriterText</div>
+        <p>逐字符输出文本，使用 <code>useTypewriter</code> Hook 控制节奏，完成后回调 <code>onTypingComplete</code>。</p>
+      </div>
+      <div class="card">
+        <div class="card-title">LoadingIndicator</div>
+        <p>API 请求期间 <code>isLoading=true</code> 时显示的加载动画。</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- 6. 后端逻辑 -->
+  <section id="backend">
+    <h2>6. 后端逻辑</h2>
+
+    <h3 id="be-api">6.1 API 接口</h3>
+    <div class="callout">
+      <strong>Base URL：</strong><code>/api/game</code>（前端通过 Vite 代理转发至后端 <code>:9999</code>）
+    </div>
+
+    <!-- POST /start -->
+    <div class="api-block">
+      <div class="api-header">
+        <span class="api-method m-post">POST</span>
+        <span class="api-path">/api/game/start</span>
+        <span class="api-desc">开始新游戏</span>
+      </div>
+      <div class="api-body">
+        <table>
+          <tr><th>方向</th><th>字段</th><th>类型</th><th>说明</th></tr>
+          <tr><td>请求</td><td>—</td><td>—</td><td>无请求体</td></tr>
+          <tr><td rowspan="4">响应</td><td><code>sessionId</code></td><td>number</td><td>会话 ID</td></tr>
+          <tr><td><code>worldIntro</code></td><td>string</td><td>世界观介绍</td></tr>
+          <tr><td><code>character</code></td><td>GameCharacter</td><td>固定角色信息</td></tr>
+          <tr><td><code>openingStory</code></td><td>string</td><td>AI 生成的开篇叙事</td></tr>
+        </table>
+      </div>
+    </div>
+
+    <!-- POST /next -->
+    <div class="api-block">
+      <div class="api-header">
+        <span class="api-method m-post">POST</span>
+        <span class="api-path">/api/game/next</span>
+        <span class="api-desc">推进叙事（点继续）</span>
+      </div>
+      <div class="api-body">
+        <table>
+          <tr><th>方向</th><th>字段</th><th>类型</th><th>说明</th></tr>
+          <tr><td>请求</td><td><code>history</code></td><td>Array</td><td>最近 10 条叙事历史（role/content）</td></tr>
+          <tr><td rowspan="5">响应</td><td><code>narrative</code></td><td>string</td><td>新生成的叙事文本</td></tr>
+          <tr><td><code>hasNode</code></td><td>boolean</td><td>是否触发决策节点</td></tr>
+          <tr><td><code>node?</code></td><td>GameNode</td><td>节点详情（含选项）</td></tr>
+          <tr><td><code>isEnding</code></td><td>boolean</td><td>是否到达结局</td></tr>
+          <tr><td><code>ending?</code></td><td>GameEnding</td><td>结局数据</td></tr>
+        </table>
+      </div>
+    </div>
+
+    <!-- POST /choose -->
+    <div class="api-block">
+      <div class="api-header">
+        <span class="api-method m-post">POST</span>
+        <span class="api-path">/api/game/choose</span>
+        <span class="api-desc">玩家做出选择</span>
+      </div>
+      <div class="api-body">
+        <table>
+          <tr><th>方向</th><th>字段</th><th>类型</th><th>说明</th></tr>
+          <tr><td rowspan="3">请求</td><td><code>nodeId</code></td><td>number</td><td>节点 ID</td></tr>
+          <tr><td><code>choiceIndex</code></td><td>number</td><td>选项索引（0 起）</td></tr>
+          <tr><td><code>history</code></td><td>Array</td><td>叙事历史</td></tr>
+          <tr><td rowspan="5">响应</td><td><code>narrative</code></td><td>string</td><td>基于选择续写的叙事</td></tr>
+          <tr><td><code>hasNode</code></td><td>boolean</td><td>是否触发新节点</td></tr>
+          <tr><td><code>node?</code></td><td>GameNode</td><td>新节点数据</td></tr>
+          <tr><td><code>isEnding</code></td><td>boolean</td><td>是否结局</td></tr>
+          <tr><td><code>stateUpdate?</code></td><td>Object</td><td><code>{ storyPhase }</code> 阶段更新</td></tr>
+        </table>
+      </div>
+    </div>
+
+    <!-- GET /history -->
+    <div class="api-block">
+      <div class="api-header">
+        <span class="api-method m-get">GET</span>
+        <span class="api-path">/api/game/history</span>
+        <span class="api-desc">获取当前会话历史</span>
+      </div>
+      <div class="api-body">
+        <table>
+          <tr><th>方向</th><th>字段</th><th>类型</th><th>说明</th></tr>
+          <tr><td>请求</td><td>—</td><td>—</td><td>无参数</td></tr>
+          <tr><td>响应</td><td><code>history</code></td><td>HistoryItem[]</td><td>所有故事节点列表（按时间升序）</td></tr>
+        </table>
+      </div>
+    </div>
+
+    <h3 id="be-service">6.2 GameService 核心逻辑</h3>
+    <div class="diagram">
+      <div class="diagram-title">GameService.startGame() 流程</div>
+      <div class="mermaid">
+flowchart TD
+    A[POST /start] --> B[将现有 active 会话\n标记为 ended]
+    B --> C[重置 AI Mock 状态]
+    C --> D[创建新 GameSession\nstatus=active\nstoryPhase=intro]
+    D --> E[调用 aiService.generateNarrative\n'intro' 阶段]
+    E --> F[保存开篇 StoryNode\nnodeType=narrative]
+    F --> G[返回 sessionId\nworldIntro\ncharacter\nopeningStory]
+      </div>
+    </div>
+
+    <div class="diagram">
+      <div class="diagram-title">GameService.getNextNarrative() 流程</div>
+      <div class="mermaid">
+flowchart TD
+    A[POST /next] --> B[获取 active 会话]
+    B --> C[构建历史摘要\n最近10条]
+    C --> D[调用 AI 生成叙事]
+    D --> E{isEnding?}
+    E -->|是| F[调用 generateEnding\n生成结局叙事]
+    F --> G[保存 ending StoryNode]
+    G --> H[会话 status=ended]
+    H --> I[返回结局数据]
+    E -->|否| J[保存 StoryNode\n含选项 JSON]
+    J --> K[advanceStoryPhase\n根据节点总数推进阶段]
+    K --> L{triggerNode?}
+    L -->|是| M[返回 narrative + node]
+    L -->|否| N[返回 narrative only]
+      </div>
+    </div>
+
+    <h3 id="be-phase">6.3 剧情阶段推进逻辑</h3>
+    <p><code>advanceStoryPhase()</code> 根据当前会话的 <strong>StoryNode 总数</strong>自动判断阶段：</p>
+
+    <div class="phase-badges">
+      <span class="phase-badge pb-intro">intro · 0–2 节点</span>
+      <span class="phase-badge pb-early">early · 3–5 节点</span>
+      <span class="phase-badge pb-mid">mid · 6–8 节点</span>
+      <span class="phase-badge pb-late">late · 9+ 节点</span>
+      <span class="phase-badge pb-ending">ending · AI 判断触发</span>
+    </div>
+    <table>
+      <tr><th>阶段</th><th>StoryNode 数</th><th>AI 写作指导</th></tr>
+      <tr><td>intro</td><td>≤ 2</td><td>故事刚开始，铺垫世界观和主角处境，节奏舒缓</td></tr>
+      <tr><td>early</td><td>3 – 5</td><td>主角开始遇到机遇与挑战，逐步展开</td></tr>
+      <tr><td>mid</td><td>6 – 8</td><td>冲突加剧，重大抉择出现，节奏加快</td></tr>
+      <tr><td>late</td><td>≥ 9</td><td>高潮迭起，命运抉择，可以考虑走向结局</td></tr>
+    </table>
+
+    <h3 id="be-db">6.4 数据库模型</h3>
+    <div class="diagram">
+      <div class="diagram-title">ER 图</div>
+      <div class="mermaid">
+erDiagram
+    game_session {
+        int id PK
+        varchar character_name
+        varchar realm
+        json state_json
+        enum status
+        datetime created_at
+    }
+    story_node {
+        int id PK
+        int session_id FK
+        varchar node_type
+        text narrative_text
+        json choices_json
+        int chosen_index
+        datetime created_at
+    }
+    game_session ||--o{ story_node : "有"
+      </div>
+    </div>
+
+    <h4>game_session 字段说明</h4>
+    <table>
+      <tr><th>字段</th><th>类型</th><th>说明</th></tr>
+      <tr><td><code>status</code></td><td>enum</td><td><code>active</code>（进行中）/ <code>ended</code>（已结束）</td></tr>
+      <tr><td><code>state_json</code></td><td>json</td><td>存储 <code>name</code>、<code>realm</code>、<code>storyPhase</code>、<code>history</code></td></tr>
+    </table>
+
+    <h4>story_node 字段说明</h4>
+    <table>
+      <tr><th>字段</th><th>类型</th><th>说明</th></tr>
+      <tr><td><code>node_type</code></td><td>varchar</td><td><code>narrative</code> / <code>event</code> / <code>battle</code> / <code>wonder</code> / <code>fate</code> / <code>ending</code></td></tr>
+      <tr><td><code>choices_json</code></td><td>json / null</td><td>选项数组，叙事型节点为 null</td></tr>
+      <tr><td><code>chosen_index</code></td><td>int / null</td><td>玩家选择的索引，未选择时为 null</td></tr>
+    </table>
+  </section>
+
+  <!-- 7. AI 层 -->
+  <section id="ai-layer">
+    <h2>7. AI 层</h2>
+
+    <h3 id="ai-provider">7.1 Provider 设计</h3>
+    <p>AI 层采用<strong>策略模式</strong>，通过 <code>AI_PROVIDER</code> 环境变量切换实现：</p>
+    <div class="grid-2">
+      <div class="card">
+        <div class="card-title">MockProvider（默认）</div>
+        <p>预设固定 JSON 响应，无需真实 AI API，用于本地开发和测试。通过 <code>resetState()</code> 重置调用状态。</p>
+      </div>
+      <div class="card">
+        <div class="card-title">OpenAiCompatibleProvider</div>
+        <p>通过 <code>axios</code> 调用 OpenAI 兼容接口（支持任何兼容 API）。需配置 <code>AI_API_URL</code>、<code>AI_API_KEY</code>、<code>AI_MODEL</code>。</p>
+      </div>
+    </div>
+
+    <div class="callout warn">
+      <strong>Provider 接口</strong>
+      所有 Provider 实现 <code>AiProvider</code> 接口的 <code>generateCompletion(messages, options)</code> 方法，返回原始 JSON 字符串，由 <code>AiService</code> 统一解析。
+    </div>
+
+    <h3 id="ai-prompt">7.2 Prompt 结构</h3>
+    <div class="diagram">
+      <div class="diagram-title">Prompt 构建流程</div>
+      <div class="mermaid">
+flowchart LR
+    A[AiService.generateNarrative] --> B[buildSystemPrompt\n世界观 + 角色 + 写作风格]
+    A --> C[buildNarrativePrompt\n剧情阶段 + 历史摘要 + 玩家选择]
+    B --> D[messages数组]
+    C --> D
+    D -->|temperature=0.85\nmaxTokens=1500| E[Provider.generateCompletion]
+    E --> F[原始 JSON 字符串]
+    F --> G[parseNarrativeResponse\n解析为 AiNarrativeResponse]
+      </div>
+    </div>
+
+    <h4>System Prompt 内容</h4>
+    <table>
+      <tr><th>部分</th><th>内容</th></tr>
+      <tr><td>身份定义</td><td>修仙题材 AI 叙事引擎</td></tr>
+      <tr><td>世界观</td><td>灵气充裕的修仙世界，凡界背景（来自 <code>WORLD_INTRO</code> 常量）</td></tr>
+      <tr><td>主角信息</td><td>李青云、练气中期、散修（来自 <code>CHARACTER_DEFAULT</code> 常量）</td></tr>
+      <tr><td>写作风格</td><td>古风仙侠文体，200-400 字/段，环境描写+心理刻画</td></tr>
+      <tr><td>输出约束</td><td>始终返回有效 JSON，不输出任何 JSON 之外的内容</td></tr>
+    </table>
+
+    <h4>Narrative Prompt 动态部分</h4>
+    <table>
+      <tr><th>变量</th><th>来源</th><th>说明</th></tr>
+      <tr><td><code>storyPhase</code></td><td>Session.stateJson.storyPhase</td><td>当前阶段及对应写作指导</td></tr>
+      <tr><td><code>historySummary</code></td><td>前端传递的最近 10 条历史</td><td>已有剧情摘要</td></tr>
+      <tr><td><code>lastChoice</code></td><td>玩家选择的文本</td><td>仅 /choose 时附加</td></tr>
+    </table>
+
+    <h3 id="ai-response">7.3 AI 响应格式</h3>
+    <h4>叙事响应（generateNarrative）</h4>
+    <pre><code>{
+  "narrative": "叙事文本内容（200-400字）",
+  "triggerNode": true,              // 是否触发决策节点
+  "nodeType": "event|battle|wonder|fate",
+  "nodeText": "节点描述文本",
+  "choices": [
+    { "text": "选项文字", "hint": "简短提示" },
+    { "text": "选项文字", "hint": "简短提示" }
+  ],
+  "isEnding": false,
+  "endingType": "ascension|death|lifespan"
+}</code></pre>
+
+    <h4>结局响应（generateEnding）</h4>
+    <pre><code>{
+  "narrative": "结局叙事文本（300-500字）",
+  "summary": "一句话总结主角的命运"
+}</code></pre>
+  </section>
+
+  <!-- 8. 核心时序图 -->
+  <section id="sequence">
+    <h2>8. 核心时序图</h2>
+
+    <h3 id="seq-start">8.1 开始游戏</h3>
+    <div class="diagram">
+      <div class="mermaid">
+sequenceDiagram
+    actor 玩家
+    participant React as React App
+    participant Hook as useGameState
+    participant API as api.ts
+    participant Ctrl as GameController
+    participant Svc as GameService
+    participant AI as AiService
+    participant DB as MySQL
+
+    玩家->>React: 点击「开始修行」
+    React->>Hook: startGame()
+    Hook->>Hook: dispatch LOADING_START
+    Hook->>API: startGame()
+    API->>Ctrl: POST /api/game/start
+    Ctrl->>Svc: startGame()
+    Svc->>DB: UPDATE active→ended（旧会话）
+    Svc->>AI: resetState()
+    Svc->>DB: INSERT game_session（新会话）
+    Svc->>AI: generateNarrative('intro', '')
+    AI-->>Svc: AiNarrativeResponse
+    Svc->>DB: INSERT story_node（开篇）
+    Svc-->>Ctrl: { sessionId, worldIntro, character, openingStory }
+    Ctrl-->>API: 200 OK
+    API-->>Hook: StartGameResponse
+    Hook->>Hook: dispatch GAME_STARTED
+    React->>玩家: 渲染游戏页面+打字机显示开篇
+      </div>
+    </div>
+
+    <h3 id="seq-next">8.2 继续叙事</h3>
+    <div class="diagram">
+      <div class="mermaid">
+sequenceDiagram
+    actor 玩家
+    participant React as React App
+    participant Hook as useGameState
+    participant Ctrl as GameController
+    participant Svc as GameService
+    participant AI as AiService
+    participant DB as MySQL
+
+    玩家->>React: 点击「继续」
+    React->>Hook: continueStory()
+    Hook->>Hook: buildHistory()（最近10条）
+    Hook->>Ctrl: POST /api/game/next {history}
+    Ctrl->>Svc: getNextNarrative(dto)
+    Svc->>DB: 查询 active 会话
+    Svc->>AI: generateNarrative(storyPhase, historySummary)
+    AI-->>Svc: AiNarrativeResponse
+
+    alt isEnding = true
+        Svc->>AI: generateEnding(endingType, historySummary)
+        AI-->>Svc: { narrative, summary }
+        Svc->>DB: INSERT story_node（ending）
+        Svc->>DB: UPDATE session status=ended
+        Svc-->>Hook: { isEnding:true, ending:{...} }
+        Hook->>Hook: dispatch ENDING_REACHED
+        React->>玩家: 渲染结局页面
+    else triggerNode = true
+        Svc->>DB: INSERT story_node（含choices_json）
+        Svc->>DB: advanceStoryPhase（更新 state_json）
+        Svc-->>Hook: { narrative, hasNode:true, node:{...} }
+        Hook->>Hook: dispatch NARRATIVE_RECEIVED
+        Hook->>Hook: dispatch NODE_TRIGGERED
+        React->>玩家: 显示叙事 + 选项按钮
+    else 纯叙事
+        Svc->>DB: INSERT story_node
+        Svc->>DB: advanceStoryPhase
+        Svc-->>Hook: { narrative, hasNode:false }
+        Hook->>Hook: dispatch NARRATIVE_RECEIVED
+        React->>玩家: 显示叙事 + 继续按钮
+    end
+      </div>
+    </div>
+
+    <h3 id="seq-choose">8.3 选择节点</h3>
+    <div class="diagram">
+      <div class="mermaid">
+sequenceDiagram
+    actor 玩家
+    participant React as React App
+    participant Hook as useGameState
+    participant Ctrl as GameController
+    participant Svc as GameService
+    participant AI as AiService
+    participant DB as MySQL
+
+    玩家->>React: 点击选项按钮
+    React->>Hook: makeChoice(nodeId, choiceIndex)
+    Hook->>Hook: buildHistory()
+    Hook->>Ctrl: POST /api/game/choose {nodeId, choiceIndex, history}
+    Ctrl->>Svc: makeChoice(dto)
+    Svc->>DB: 查询 active 会话
+    Svc->>DB: UPDATE story_node.chosen_index = choiceIndex
+    Svc->>AI: generateNarrative(storyPhase, historySummary, choiceText)
+    AI-->>Svc: AiNarrativeResponse
+    Svc->>DB: INSERT 新 story_node
+    Svc->>DB: advanceStoryPhase
+    Svc-->>Hook: { narrative, hasNode, stateUpdate }
+    Hook->>Hook: dispatch NODE_TRIGGERED(null)（清除选项）
+    Hook->>Hook: dispatch NARRATIVE_RECEIVED
+    Hook->>Hook: dispatch SET_PHASE（如有更新）
+    React->>玩家: 显示新叙事
+      </div>
+    </div>
+  </section>
+
+  <!-- 9. 游戏流程图 -->
+  <section id="game-flow">
+    <h2>9. 游戏整体流程图</h2>
+    <div class="diagram">
+      <div class="mermaid">
+flowchart TD
+    S([开始]) --> A[进入开始页\nphase=idle]
+    A --> B[点击开始修行]
+    B --> C[/POST start/\n创建会话 + AI生成开篇]
+    C --> D[进入游戏页\nphase=playing]
+    D --> E[打字机显示叙事]
+    E --> F{有决策节点?}
+
+    F -->|否| G[显示继续按钮]
+    G --> H[玩家点击继续]
+    H --> I[/POST next/\nAI续写叙事]
+
+    F -->|是| J[显示2-3个选项]
+    J --> K[玩家选择选项]
+    K --> L[/POST choose/\nAI基于选择续写]
+
+    I --> M{isEnding?}
+    L --> M
+
+    M -->|否| N[保存节点\n推进故事阶段]
+    N --> E
+
+    M -->|是| O[/AI生成结局叙事/]
+    O --> P[会话结束\nstatus=ended]
+    P --> Q[进入结局页\nphase=ended]
+
+    Q --> R{结局类型}
+    R -->|飞升 ascension| R1[主角突破大乘\n白日飞升]
+    R -->|陨落 death| R2[战斗落败\n身死道消]
+    R -->|寿尽 lifespan| R3[修行数百年\n安然坐化]
+
+    R1 & R2 & R3 --> T[展示结局文本\n一句话命运总结]
+    T --> U[点击重新修行]
+    U --> A
+
+    style S fill:#3fb950,color:#0d1117,stroke:none
+    style Q fill:#21262d,stroke:#bc8cff,color:#bc8cff
+    style R1 fill:#21262d,stroke:#3fb950,color:#3fb950
+    style R2 fill:#21262d,stroke:#f85149,color:#f85149
+    style R3 fill:#21262d,stroke:#8b949e,color:#8b949e
+      </div>
+    </div>
+  </section>
+
+  <!-- 10. 节点 & 结局 -->
+  <section id="node-types">
+    <h2>10. 节点类型 &amp; 结局类型</h2>
+
+    <h3>决策节点类型</h3>
+    <table>
+      <tr><th>类型</th><th>名称</th><th>说明</th><th>示例</th></tr>
+      <tr><td><code>event</code></td><td>事件</td><td>日常修仙生活，概率适中</td><td>坊市交易、与道友切磋</td></tr>
+      <tr><td><code>battle</code></td><td>战斗</td><td>遭遇对手，需选择策略</td><td>遭遇妖兽、门派冲突</td></tr>
+      <tr><td><code>wonder</code></td><td>奇遇</td><td>低概率高收益事件</td><td>发现前人洞府、奇珍异宝</td></tr>
+      <tr><td><code>fate</code></td><td>机缘</td><td>命运性转折点</td><td>灵根觉醒、传承降临</td></tr>
+    </table>
+
+    <h3>触发规律</h3>
+    <div class="callout success">
+      <strong>节点触发频率：</strong>AI 被指导每 2–4 段叙事触发一次决策节点，每个节点提供 2–3 个选项，每个选项附带简短的提示文字（<code>hint</code>）。
+    </div>
+
+    <h3>结局类型</h3>
+    <div class="grid-3">
+      <div class="card" style="border-color:rgba(63,185,80,.3)">
+        <div class="card-title" style="color:#3fb950">飞升 · ascension</div>
+        <p>突破大乘境，引发天劫，渡劫成功，白日飞升，脱离凡界。修仙之路最圆满结局。</p>
+      </div>
+      <div class="card" style="border-color:rgba(248,81,73,.3)">
+        <div class="card-title" style="color:#f85149">陨落 · death</div>
+        <p>激烈战斗中落败，元神俱灭，身死道消。修行路上未走到最后。</p>
+      </div>
+      <div class="card" style="border-color:rgba(139,148,158,.3)">
+        <div class="card-title" style="color:#8b949e">寿尽 · lifespan</div>
+        <p>修行数百年，未能突破瓶颈，大限将至时安然坐化，魂归天地。</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- 11. 部署说明 -->
+  <section id="deploy">
+    <h2>11. 部署说明</h2>
+    <div class="diagram">
+      <div class="diagram-title">Docker Compose 服务依赖关系</div>
+      <div class="mermaid">
+graph LR
+    subgraph Compose["docker-compose.yml"]
+        M[mysql\n:3306\nmysql:latest]
+        B[backend\n:9999\n./server]
+        F[frontend\n:5173\n./client]
+    end
+    M -->|healthcheck 通过后| B
+    B -->|启动后| F
+    B -->|DB_HOST=mysql| M
+    F -->|VITE_API_TARGET\n=http://backend:9999| B
+
+    style Compose fill:#161b22,stroke:#30363d,color:#e6edf3
+      </div>
+    </div>
+
+    <h3>环境变量</h3>
+    <table>
+      <tr><th>变量</th><th>服务</th><th>默认值</th><th>说明</th></tr>
+      <tr><td><code>AI_PROVIDER</code></td><td>backend</td><td><code>mock</code></td><td>切换 <code>mock</code> 或 <code>openai-compatible</code></td></tr>
+      <tr><td><code>AI_API_URL</code></td><td>backend</td><td>—</td><td>OpenAI 兼容 API 地址</td></tr>
+      <tr><td><code>AI_API_KEY</code></td><td>backend</td><td>—</td><td>API 密钥</td></tr>
+      <tr><td><code>AI_MODEL</code></td><td>backend</td><td><code>gpt-4o-mini</code></td><td>模型名称</td></tr>
+      <tr><td><code>PORT</code></td><td>backend</td><td><code>9999</code></td><td>后端监听端口</td></tr>
+      <tr><td><code>DB_HOST/PORT/USER...</code></td><td>backend</td><td>mysql/3306/root/...</td><td>数据库连接配置</td></tr>
+      <tr><td><code>VITE_API_TARGET</code></td><td>frontend</td><td><code>http://backend:9999</code></td><td>Vite 代理目标</td></tr>
+    </table>
+
+    <div class="callout">
+      <strong>快速启动：</strong>
+      在 <code>demov1.0/</code> 目录执行 <code>docker compose up --build</code>，
+      服务启动后访问 <code>http://localhost:5173</code> 即可体验游戏。
+      默认使用 Mock AI，无需配置真实 API Key。
+    </div>
+  </section>
+
+</main>
+
+<script>
+  // Mermaid init
+  mermaid.initialize({
+    startOnLoad: true,
+    theme: 'dark',
+    themeVariables: {
+      background: '#161b22',
+      primaryColor: '#21262d',
+      primaryBorderColor: '#30363d',
+      primaryTextColor: '#e6edf3',
+      secondaryColor: '#0d1117',
+      lineColor: '#58a6ff',
+      tertiaryColor: '#21262d',
+      edgeLabelBackground: '#161b22',
+      fontFamily: 'Segoe UI, system-ui, sans-serif',
+    },
+    sequence: {
+      actorMargin: 60,
+      messageMargin: 25,
+      useMaxWidth: true,
+    },
+    flowchart: { useMaxWidth: true, htmlLabels: true },
+  });
+
+  // TOC active highlight on scroll
+  const sections = document.querySelectorAll('section[id], h3[id]');
+  const links = document.querySelectorAll('.toc a');
+
+  const observer = new IntersectionObserver((entries) => {
+    entries.forEach(entry => {
+      if (entry.isIntersecting) {
+        const id = entry.target.getAttribute('id');
+        links.forEach(link => {
+          link.classList.toggle('active', link.getAttribute('href') === '#' + id);
+        });
+      }
+    });
+  }, { rootMargin: '-20% 0px -70% 0px' });
+
+  sections.forEach(s => observer.observe(s));
+</script>
+</body>
+</html>

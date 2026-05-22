@@ -1,0 +1,1425 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>《文字修仙》技术设计文档 v1.0</title>
+<style>
+  :root {
+    --bg: #0e1019;
+    --surface: #161923;
+    --card: #1c1f2e;
+    --border: #2a2e3f;
+    --text: #d8dae5;
+    --dim: #7c809a;
+    --accent: #7b6cf6;
+    --accent2: #5b9cf5;
+    --green: #4ecb8d;
+    --orange: #f0a050;
+    --red: #ef5b5b;
+    --cyan: #56d4c8;
+    --pink: #e879a8;
+    --tag-bg: #222639;
+    --radius: 10px;
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    font-family: -apple-system, "PingFang SC", "Noto Sans SC", "Helvetica Neue", sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    line-height: 1.75;
+    font-size: 15px;
+  }
+
+  /* ---------- TOC ---------- */
+  .toc {
+    position: fixed;
+    left: 0;
+    top: 0;
+    width: 280px;
+    height: 100vh;
+    overflow-y: auto;
+    background: var(--card);
+    border-right: 1px solid var(--border);
+    padding: 24px 16px;
+    z-index: 100;
+  }
+  .toc-title { font-size: 16px; font-weight: 700; margin-bottom: 14px; color: var(--accent); }
+  .toc-list { list-style: none; margin: 0; padding: 0; }
+  .toc-list li { margin: 5px 0; }
+  .toc-list a {
+    color: var(--text); text-decoration: none;
+    font-size: 12.5px; transition: color .15s;
+    display: block; padding: 3px 8px; border-radius: 4px;
+  }
+  .toc-list a:hover { color: var(--accent2); background: rgba(91,156,245,0.08); }
+  .toc-list .indent { padding-left: 16px; }
+  .toc-list .indent2 { padding-left: 30px; }
+
+  /* ---------- layout ---------- */
+  .page {
+    max-width: 1060px;
+    margin-left: max(280px, calc(280px + (100vw - 280px - 1060px) / 2));
+    margin-right: auto;
+    padding: 48px 28px 80px;
+  }
+
+  /* ---------- cover ---------- */
+  .cover {
+    text-align: center;
+    padding: 64px 0 48px;
+    border-bottom: 1px solid var(--border);
+    margin-bottom: 48px;
+  }
+  .cover-title {
+    font-size: 34px; font-weight: 800;
+    background: linear-gradient(135deg, var(--accent), var(--accent2), var(--cyan));
+    -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+    margin-bottom: 12px; letter-spacing: 2px;
+  }
+  .cover-sub { color: var(--dim); font-size: 14px; }
+  .cover-meta {
+    display: flex; justify-content: center; gap: 32px;
+    margin-top: 24px; font-size: 13px; color: var(--dim);
+  }
+
+  /* ---------- headings ---------- */
+  h1 {
+    font-size: 24px; font-weight: 700;
+    margin: 56px 0 24px; padding-bottom: 10px;
+    border-bottom: 2px solid var(--accent); color: var(--accent);
+  }
+  h2 {
+    font-size: 19px; font-weight: 600;
+    margin: 36px 0 16px; color: var(--accent2);
+    display: flex; align-items: center; gap: 8px;
+  }
+  h3 { font-size: 16px; font-weight: 600; margin: 24px 0 10px; color: var(--text); }
+  h4 { font-size: 14px; font-weight: 600; margin: 16px 0 8px; color: var(--dim); }
+  p { margin: 8px 0; }
+  ul, ol { margin: 8px 0 8px 20px; }
+  li { margin: 4px 0; }
+
+  /* ---------- card ---------- */
+  .card {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 24px; margin: 16px 0;
+  }
+
+  /* ---------- tag ---------- */
+  .tag {
+    display: inline-block; padding: 2px 8px; border-radius: 4px;
+    font-size: 11px; font-weight: 700;
+    font-family: "SF Mono", "Fira Code", monospace;
+  }
+  .tag-core { background: rgba(123,108,246,0.12); color: var(--accent); }
+  .tag-ext  { background: rgba(240,160,80,0.12); color: var(--orange); }
+  .tag-new  { background: rgba(78,203,141,0.12); color: var(--green); }
+  .tag-del  { background: rgba(239,91,91,0.12); color: var(--red); }
+  .tag-sse  { background: rgba(86,212,200,0.12); color: var(--cyan); }
+
+  /* ---------- table ---------- */
+  .tb {
+    width: 100%; border-collapse: collapse;
+    font-size: 13.5px; margin: 12px 0;
+  }
+  .tb th {
+    background: var(--tag-bg); padding: 8px 14px;
+    text-align: left; font-weight: 600; color: var(--dim);
+    font-size: 12px; letter-spacing: .5px; white-space: nowrap;
+  }
+  .tb td {
+    padding: 9px 14px; border-bottom: 1px solid var(--border); vertical-align: top;
+  }
+  .tb tr:last-child td { border-bottom: none; }
+  .tb tr:hover td { background: rgba(123,108,246,0.04); }
+  .path { font-family: "SF Mono","Fira Code",monospace; color: var(--accent2); font-size: 12.5px; }
+
+  /* ---------- note ---------- */
+  .note {
+    padding: 12px 16px; border-radius: 0 var(--radius) var(--radius) 0;
+    margin: 12px 0; font-size: 13.5px;
+  }
+  .note-info { background: rgba(91,156,245,0.08); border-left: 3px solid var(--accent2); color: var(--accent2); }
+  .note-warn { background: rgba(240,160,80,0.08); border-left: 3px solid var(--orange); color: var(--orange); }
+  .note-ok   { background: rgba(78,203,141,0.08); border-left: 3px solid var(--green); color: var(--green); }
+
+  /* ---------- code / pre ---------- */
+  pre {
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: 8px; padding: 16px;
+    font-size: 13px; font-family: "SF Mono","Fira Code",monospace;
+    overflow-x: auto; margin: 12px 0; line-height: 1.6; color: #c8cce0;
+  }
+  code {
+    font-family: "SF Mono","Fira Code",monospace; font-size: 12.5px;
+    background: var(--tag-bg); padding: 2px 6px; border-radius: 4px; color: var(--accent2);
+  }
+
+  /* ---------- arch diagram ---------- */
+  .arch {
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: var(--radius); padding: 20px 24px; margin: 16px 0;
+    font-family: "SF Mono","Fira Code",monospace; font-size: 12.5px;
+    line-height: 1.6; white-space: pre; overflow-x: auto; color: #a0a4be;
+  }
+
+  /* ---------- decision grid ---------- */
+  .decision-grid {
+    display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin: 16px 0;
+  }
+  .decision-item {
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: 8px; padding: 14px 16px;
+  }
+  .decision-item .label { font-size: 12px; color: var(--dim); margin-bottom: 4px; }
+  .decision-item .value { font-weight: 600; font-size: 14px; }
+
+  /* ---------- flow ---------- */
+  .flow {
+    display: flex; flex-wrap: wrap; gap: 6px; align-items: center;
+    margin: 12px 0; font-size: 13px;
+  }
+  .flow-step {
+    background: var(--tag-bg); padding: 5px 14px; border-radius: 6px;
+    border: 1px solid var(--border);
+  }
+  .flow-step.hl { background: rgba(123,108,246,0.12); border-color: var(--accent); color: var(--accent); font-weight: 600; }
+  .flow-arrow { color: var(--dim); font-size: 11px; }
+
+  .hr { border: none; border-top: 1px solid var(--border); margin: 36px 0; }
+
+  /* ---------- gap analysis ---------- */
+  .gap-card {
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: var(--radius); padding: 20px; margin: 12px 0;
+  }
+  .gap-card .gap-title { font-weight: 700; font-size: 15px; margin-bottom: 8px; color: var(--orange); }
+
+  @media (max-width: 768px) {
+    .page { padding: 24px 14px 60px; margin-left: 0; }
+    .toc { position: static; width: 100%; height: auto; border-right: none; border-bottom: 1px solid var(--border); }
+    .decision-grid { grid-template-columns: 1fr; }
+  }
+</style>
+</head>
+<body>
+
+<!-- ==================== 目录 ==================== -->
+<div class="toc">
+  <div class="toc-title">设计文档目录</div>
+  <ul class="toc-list">
+    <li><a href="#s1">一、文档概述</a></li>
+    <li class="indent"><a href="#s1-1">1.1 文档目标</a></li>
+    <li class="indent"><a href="#s1-2">1.2 Demo 现状与差距分析</a></li>
+    <li><a href="#s2">二、整体架构设计</a></li>
+    <li class="indent"><a href="#s2-1">2.1 技术选型决策</a></li>
+    <li class="indent"><a href="#s2-2">2.2 系统架构图</a></li>
+    <li class="indent"><a href="#s2-3">2.3 后端分层架构</a></li>
+    <li class="indent"><a href="#s2-4">2.4 前端架构</a></li>
+    <li><a href="#s3">三、Agent 体系详细设计</a></li>
+    <li class="indent"><a href="#s3-1">3.1 三 Agent 协作模式</a></li>
+    <li class="indent"><a href="#s3-2">3.2 Agent3 世界大纲 Agent</a></li>
+    <li class="indent"><a href="#s3-3">3.3 Agent1 故事生成 Agent</a></li>
+    <li class="indent"><a href="#s3-4">3.4 Agent2 节点生成 Agent</a></li>
+    <li class="indent"><a href="#s3-5">3.5 Prompt Engineering 策略</a></li>
+    <li class="indent"><a href="#s3-6">3.6 LangChain 集成方案</a></li>
+    <li><a href="#s4">四、后端模块设计</a></li>
+    <li class="indent"><a href="#s4-1">4.1 NestJS 模块划分</a></li>
+    <li class="indent"><a href="#s4-2">4.2 鉴权模块</a></li>
+    <li class="indent"><a href="#s4-3">4.3 游戏核心模块</a></li>
+    <li class="indent"><a href="#s4-4">4.4 SSE 实时推送模块</a></li>
+    <li class="indent"><a href="#s4-5">4.5 状态管理与一致性</a></li>
+    <li><a href="#s5">五、数据库设计</a></li>
+    <li class="indent"><a href="#s5-1">5.1 ER 模型与表结构</a></li>
+    <li class="indent"><a href="#s5-2">5.2 JSON 字段设计</a></li>
+    <li class="indent"><a href="#s5-3">5.3 索引策略</a></li>
+    <li><a href="#s6">六、前端设计</a></li>
+    <li class="indent"><a href="#s6-1">6.1 Taro + React 组件架构</a></li>
+    <li class="indent"><a href="#s6-2">6.2 状态管理方案</a></li>
+    <li class="indent"><a href="#s6-3">6.3 页面路由与交互流程</a></li>
+    <li class="indent"><a href="#s6-4">6.4 视觉设计规范</a></li>
+    <li><a href="#s7">七、核心流程时序设计</a></li>
+    <li class="indent"><a href="#s7-1">7.1 新游戏完整时序</a></li>
+    <li class="indent"><a href="#s7-2">7.2 修炼循环时序</a></li>
+    <li class="indent"><a href="#s7-3">7.3 节点选择与战斗时序</a></li>
+    <li class="indent"><a href="#s7-4">7.4 境界突破与飞升时序</a></li>
+    <li><a href="#s8">八、容错与兜底策略</a></li>
+    <li><a href="#s9">九、部署架构</a></li>
+    <li><a href="#s10">十、开发路线图与里程碑</a></li>
+  </ul>
+</div>
+
+<div class="page">
+
+<!-- ==================== 封面 ==================== -->
+<div class="cover">
+  <div class="cover-title">《文字修仙》技术设计文档</div>
+  <div class="cover-sub">基于 PRD v1.1 的全栈实现方案 &middot; Agent 驱动叙事架构</div>
+  <div class="cover-meta">
+    <span>版本 v1.0</span>
+    <span>2026-05</span>
+    <span>状态：设计中</span>
+  </div>
+</div>
+
+<!-- ============================================================ -->
+<h1 id="s1">一、文档概述</h1>
+
+<h2 id="s1-1">1.1 文档目标</h2>
+<p>本文档基于《文字修仙》PRD v1.1 需求文档，结合已有的 demov1.0 验证代码，产出一份可直接指导工程实施的<strong>详细技术设计方案</strong>。文档覆盖：</p>
+<ul>
+  <li>从 Demo 到正式版的架构升级路径</li>
+  <li>三 Agent 混合式 AI 架构的详细设计与 Prompt Engineering 方案</li>
+  <li>后端 NestJS 模块拆分与核心业务逻辑设计</li>
+  <li>前端 Taro 4.x (React) 组件架构与状态管理</li>
+  <li>数据库 Schema 设计（含 JSON 字段、索引策略）</li>
+  <li>SSE 实时推送、预生成、一致性保障等关键技术方案</li>
+  <li>容错兜底策略与部署架构</li>
+</ul>
+
+<h2 id="s1-2">1.2 Demo 现状与差距分析</h2>
+
+<div class="card">
+  <h3 style="margin-top:0;color:var(--accent);">demov1.0 已验证能力</h3>
+  <table class="tb">
+    <thead><tr><th>能力</th><th>实现状态</th><th>说明</th></tr></thead>
+    <tbody>
+      <tr><td>LangChain + DeepSeek 集成</td><td><span class="tag tag-core">已验证</span></td><td>ChatOpenAI 对接 DeepSeek API，JSON 格式输出</td></tr>
+      <tr><td>单 Agent 叙事生成</td><td><span class="tag tag-core">已验证</span></td><td>三层 Prompt（System/Narrative/Ending）</td></tr>
+      <tr><td>角色属性系统</td><td><span class="tag tag-core">已验证</span></td><td>7 维属性 + 境界突破 + 属性变化</td></tr>
+      <tr><td>前端 React SPA</td><td><span class="tag tag-core">已验证</span></td><td>useReducer 状态管理 + 打字机效果</td></tr>
+      <tr><td>NestJS + TypeORM + MySQL</td><td><span class="tag tag-core">已验证</span></td><td>基础 CRUD + 会话管理</td></tr>
+      <tr><td>Docker 容器化部署</td><td><span class="tag tag-core">已验证</span></td><td>docker-compose 前后端 + MySQL</td></tr>
+    </tbody>
+  </table>
+</div>
+
+<div class="card">
+  <h3 style="margin-top:0;color:var(--orange);">正式版需补齐的能力差距</h3>
+  <table class="tb">
+    <thead><tr><th>差距维度</th><th>Demo 现状</th><th>正式版目标</th><th>改造量</th></tr></thead>
+    <tbody>
+      <tr><td>Agent 体系</td><td>单一叙事 Agent</td><td>三 Agent 混合式（大纲+故事+节点）+ 校验层</td><td><span class="tag tag-new">重构</span></td></tr>
+      <tr><td>前端框架</td><td>React Vite SPA</td><td>Taro 4.x (React) 双端小程序</td><td><span class="tag tag-new">重写</span></td></tr>
+      <tr><td>鉴权</td><td>无</td><td>微信/支付宝 OpenID + JWT</td><td><span class="tag tag-new">新增</span></td></tr>
+      <tr><td>实时推送</td><td>HTTP 轮询</td><td>SSE 流式推送</td><td><span class="tag tag-new">新增</span></td></tr>
+      <tr><td>预生成</td><td>无</td><td>节点预生成 + 分支缓存</td><td><span class="tag tag-new">新增</span></td></tr>
+      <tr><td>属性体系</td><td>简化 7 维</td><td>精/气/神三维 + 派生战斗值 + 软属性</td><td><span class="tag tag-ext">扩展</span></td></tr>
+      <tr><td>节点类型</td><td>4 类（event/battle/wonder/fate）</td><td>8 类（+闭关/宗门/天劫/因果）</td><td><span class="tag tag-ext">扩展</span></td></tr>
+      <tr><td>存档系统</td><td>单会话</td><td>多存档 + 继续游戏</td><td><span class="tag tag-ext">扩展</span></td></tr>
+      <tr><td>缓存层</td><td>无</td><td>Redis（会话/频控/预生成）</td><td><span class="tag tag-new">新增</span></td></tr>
+      <tr><td>世界迁移</td><td>无</td><td>双路径飞升 + 新世界生成</td><td><span class="tag tag-new">新增</span></td></tr>
+      <tr><td>战斗系统</td><td>AI 一体生成</td><td>概率模型 + Agent 描述 + 独立接口</td><td><span class="tag tag-new">新增</span></td></tr>
+    </tbody>
+  </table>
+</div>
+
+<hr class="hr">
+
+<!-- ============================================================ -->
+<h1 id="s2">二、整体架构设计</h1>
+
+<h2 id="s2-1">2.1 技术选型决策</h2>
+<div class="decision-grid">
+  <div class="decision-item"><div class="label">前端框架</div><div class="value">Taro 4.x + React 18 + TypeScript</div></div>
+  <div class="decision-item"><div class="label">状态管理</div><div class="value">Zustand（轻量、支持 Taro）</div></div>
+  <div class="decision-item"><div class="label">后端框架</div><div class="value">NestJS 10 + TypeScript</div></div>
+  <div class="decision-item"><div class="label">ORM</div><div class="value">TypeORM（已验证）</div></div>
+  <div class="decision-item"><div class="label">数据库</div><div class="value">MySQL 8.0</div></div>
+  <div class="decision-item"><div class="label">缓存</div><div class="value">Redis 7</div></div>
+  <div class="decision-item"><div class="label">AI SDK</div><div class="value">LangChain.js（@langchain/openai）</div></div>
+  <div class="decision-item"><div class="label">AI 模型</div><div class="value">DeepSeek-Chat（OpenAI 兼容）</div></div>
+  <div class="decision-item"><div class="label">实时推送</div><div class="value">SSE（NestJS @Sse 装饰器）</div></div>
+  <div class="decision-item"><div class="label">部署</div><div class="value">Docker Compose + 云服务器</div></div>
+  <div class="decision-item"><div class="label">鉴权</div><div class="value">JWT + 微信/支付宝 OpenID</div></div>
+  <div class="decision-item"><div class="label">接口规范</div><div class="value">RESTful + Envelope { code, msg, data }</div></div>
+</div>
+
+<h2 id="s2-2">2.2 系统架构图</h2>
+<div class="arch">
+                        ┌────────────────────────────────────┐
+                        │         Client Layer                │
+                        │  Taro 4.x (React) Mini-Program     │
+                        │  微信小程序  |  支付宝小程序         │
+                        └──────────────┬─────────────────────┘
+                                       │ HTTP REST / SSE
+                        ┌──────────────▼─────────────────────┐
+                        │      API Gateway (NestJS)           │
+                        │  ├── AuthGuard (JWT)                │
+                        │  ├── RateLimit (Redis)              │
+                        │  └── SSE Manager                    │
+                        └──────────────┬─────────────────────┘
+               ┌───────────────────────┼───────────────────────┐
+               ▼                       ▼                       ▼
+  ┌────────────────────┐  ┌────────────────────┐  ┌────────────────────┐
+  │  Game Module        │  │  Agent Module       │  │  User Module        │
+  │  ├── CharacterSvc   │  │  ├── Agent3 (World) │  │  ├── AuthSvc        │
+  │  ├── NodeSvc        │  │  ├── Agent1 (Story) │  │  ├── ProfileSvc     │
+  │  ├── BattleSvc      │  │  ├── Agent2 (Node)  │  │  └── SaveSvc        │
+  │  ├── RealmSvc       │  │  ├── PromptBuilder  │  └────────────────────┘
+  │  ├── AscendSvc      │  │  └── Validator      │
+  │  └── EndingSvc      │  └─────────┬──────────┘
+  └─────────┬──────────┘             │ LangChain
+            │                        ▼
+            │              ┌──────────────────┐
+            │              │  DeepSeek API     │
+            │              │  (LLM Provider)   │
+            │              └──────────────────┘
+            ▼
+  ┌──────────────────────────────────────────────┐
+  │           Data Layer                          │
+  │  ├── MySQL 8.0 (TypeORM)                     │
+  │  └── Redis 7 (Session / Cache / RateLimit)   │
+  └──────────────────────────────────────────────┘
+</div>
+
+<h2 id="s2-3">2.3 后端分层架构</h2>
+<div class="arch">
+NestJS Application
+├── src/
+│   ├── common/                    # 通用层
+│   │   ├── guards/                # AuthGuard, RateLimitGuard
+│   │   ├── interceptors/          # ResponseEnvelope, Logging
+│   │   ├── filters/               # GlobalException
+│   │   ├── decorators/            # @CurrentUser, @Public
+│   │   └── pipes/                 # ValidationPipe
+│   │
+│   ├── config/                    # 配置层
+│   │   ├── database.config.ts     # TypeORM Config
+│   │   ├── redis.config.ts        # Redis Config
+│   │   └── ai.config.ts           # DeepSeek/LLM Config
+│   │
+│   ├── auth/                      # 鉴权模块
+│   │   ├── auth.module.ts
+│   │   ├── auth.controller.ts     # wx-login, ali-login, refresh
+│   │   ├── auth.service.ts
+│   │   └── jwt.strategy.ts
+│   │
+│   ├── user/                      # 用户模块
+│   │   ├── user.module.ts
+│   │   ├── user.controller.ts     # profile, records, saves
+│   │   ├── user.service.ts
+│   │   └── entities/
+│   │
+│   ├── game/                      # 游戏核心模块
+│   │   ├── game.module.ts
+│   │   ├── game.controller.ts     # 31 个 API endpoints
+│   │   ├── services/
+│   │   │   ├── character.service.ts   # 角色创建/属性计算
+│   │   │   ├── node.service.ts        # 节点生成/预生成
+│   │   │   ├── battle.service.ts      # 战斗概率模型
+│   │   │   ├── realm.service.ts       # 境界突破/天劫
+│   │   │   ├── ascend.service.ts      # 飞升双路径
+│   │   │   ├── ending.service.ts      # 结局判定
+│   │   │   └── stream.service.ts      # SSE 推送管理
+│   │   ├── entities/
+│   │   └── dto/
+│   │
+│   ├── agent/                     # Agent AI 模块（独立可拆）
+│   │   ├── agent.module.ts
+│   │   ├── agent.service.ts       # 统一调度入口
+│   │   ├── providers/
+│   │   │   ├── langchain.provider.ts  # LangChain ChatOpenAI
+│   │   │   └── mock.provider.ts       # 开发测试用
+│   │   ├── agents/
+│   │   │   ├── world-agent.ts         # Agent3 世界大纲
+│   │   │   ├── story-agent.ts         # Agent1 故事生成
+│   │   │   └── node-agent.ts          # Agent2 节点生成
+│   │   ├── prompts/
+│   │   │   ├── world.prompt.ts        # Agent3 Prompt 模板
+│   │   │   ├── story.prompt.ts        # Agent1 Prompt 模板
+│   │   │   ├── node.prompt.ts         # Agent2 Prompt 模板
+│   │   │   └── validator.prompt.ts    # Agent3 校验 Prompt
+│   │   └── validators/
+│   │       └── content-validator.ts   # 输出校验逻辑
+│   │
+│   └── shared/                    # 共享层
+│       ├── constants.ts           # 境界体系/节点频率/战力公式
+│       ├── interfaces.ts          # 全局接口定义
+│       └── utils.ts               # 工具函数
+│
+├── .env                           # 环境变量
+├── nest-cli.json
+└── docker-compose.yml
+</div>
+
+<h2 id="s2-4">2.4 前端架构</h2>
+<div class="arch">
+Taro 4.x Application (React)
+├── src/
+│   ├── app.ts                     # Taro 入口
+│   ├── app.config.ts              # 全局配置
+│   │
+│   ├── pages/
+│   │   ├── index/                 # 首页（登录+开始）
+│   │   ├── game/                  # 游戏主界面
+│   │   ├── saves/                 # 存档列表
+│   │   ├── records/               # 历史记录
+│   │   └── profile/               # 个人中心
+│   │
+│   ├── components/
+│   │   ├── AttributePanel/        # 角色属性面板
+│   │   ├── NarrativeFlow/         # 叙事文字流
+│   │   ├── NodeCard/              # 节点选项卡片
+│   │   ├── BattleScene/           # 战斗展示
+│   │   ├── RealmBreak/            # 突破动画
+│   │   └── EndingScreen/          # 结局展示
+│   │
+│   ├── store/                     # Zustand stores
+│   │   ├── useGameStore.ts        # 游戏状态
+│   │   ├── useCharacterStore.ts   # 角色属性
+│   │   └── useAuthStore.ts        # 登录态
+│   │
+│   ├── services/
+│   │   ├── api.ts                 # HTTP 请求封装
+│   │   ├── sse.ts                 # SSE 连接管理
+│   │   └── auth.ts                # 登录逻辑
+│   │
+│   ├── hooks/
+│   │   ├── useSSE.ts              # SSE 自定义 Hook
+│   │   ├── useTypewriter.ts       # 打字机效果
+│   │   └── useCountdown.ts        # 寿命倒计时
+│   │
+│   └── styles/
+│       ├── theme.scss             # 主题变量
+│       └── fonts/                 # 霞鹜文楷字体
+│
+├── config/
+│   ├── index.ts                   # Taro 编译配置
+│   └── dev.ts / prod.ts
+└── project.config.json            # 微信小程序配置
+</div>
+
+<hr class="hr">
+
+<!-- ============================================================ -->
+<h1 id="s3">三、Agent 体系详细设计</h1>
+
+<h2 id="s3-1">3.1 三 Agent 协作模式</h2>
+
+<div class="arch">
+┌─────────────────────────────────────────────────────────────────┐
+│                      Agent 协作流程                               │
+├─────────────────────────────────────────────────────────────────┤
+│                                                                 │
+│  [新游戏开始]                                                    │
+│       │                                                         │
+│       ▼                                                         │
+│  Agent3 (世界大纲) ──────── 生成世界框架                          │
+│       │                     输出: worldOutline                   │
+│       ▼                                                         │
+│  Agent1 (故事生成) ──────── 生成故事脉络                          │
+│       │                     输入: worldOutline + character       │
+│       │                     输出: storyOutline + npcs            │
+│       ▼                                                         │
+│  Agent3 (校验) ────────── 校验 Agent1 输出一致性                  │
+│       │                     通过 → 继续 │ 失败 → 重试(max 2)     │
+│       ▼                                                         │
+│  [游戏循环]                                                      │
+│       │                                                         │
+│       ▼                                                         │
+│  Agent2 (节点生成) ──────── 每次生成 2~3 个预备节点               │
+│       │                     输入: worldOutline + storyOutline    │
+│       │                           + gameState + recentHistory    │
+│       │                     输出: node[]                         │
+│       ▼                                                         │
+│  Agent3 (校验) ────────── 校验节点内容合理性                      │
+│       │                     境界白名单 / 世界规则 / 逻辑一致      │
+│       ▼                                                         │
+│  [推送到前端]                                                    │
+│                                                                 │
+│  [世界迁移]                                                      │
+│       │                                                         │
+│       ▼                                                         │
+│  Agent3 (新世界) → Agent1 (过渡故事) → 循环继续                   │
+│                                                                 │
+└─────────────────────────────────────────────────────────────────┘
+</div>
+
+<h2 id="s3-2">3.2 Agent3 -- 世界大纲 Agent（校验层）</h2>
+
+<h4>职责</h4>
+<ul>
+  <li><strong>生成职责</strong>：新游戏/新世界时生成世界框架（地理、历史、势力、规则）</li>
+  <li><strong>校验职责</strong>：校验 Agent1/Agent2 输出是否符合世界观和境界限制</li>
+</ul>
+
+<h4>输入输出 Schema</h4>
+<pre>{
+  // 生成模式输入
+  "mode": "generate",
+  "character": { "realm": "练气", "background": "散修" },
+  "worldType": "凡界",
+  "channelQuality": null,  // 飞升路径B时非空
+
+  // 输出
+  "worldOutline": {
+    "name": "苍茫界",
+    "geography": "三洲九域...",
+    "history": "万年前仙魔大战...",
+    "factions": [
+      { "name": "青云宗", "type": "righteous", "strength": "A", "specialty": "剑修" }
+    ],
+    "rules": ["灵气浓郁但分布不均", "禁止元婴以上在凡人城市动手"],
+    "承载上限": "化神"
+  }
+}</pre>
+
+<pre>{
+  // 校验模式输入
+  "mode": "validate",
+  "worldOutline": { ... },
+  "contentToValidate": { ... },  // Agent1/Agent2 的输出
+  "currentRealm": "练气",
+
+  // 输出
+  "valid": true,
+  "issues": [],            // 不一致的问题列表
+  "suggestions": []        // 修正建议
+}</pre>
+
+<h2 id="s3-3">3.3 Agent1 -- 故事生成 Agent（生成层）</h2>
+
+<h4>职责</h4>
+<ul>
+  <li>生成主角出身背景、核心 NPC、命运锚点</li>
+  <li>提供故事宏观走向（松散大纲，不限制玩家自由度）</li>
+</ul>
+
+<h4>输出 Schema</h4>
+<pre>{
+  "background": "李青云出身于...",
+  "npcs": [
+    {
+      "name": "周平",
+      "type": "friend",
+      "personality": "温厚谨慎",
+      "initialAffinity": 60,
+      "plotRole": "引路人"
+    }
+  ],
+  "destinyAnchors": [
+    {
+      "phase": "金丹期",
+      "type": "KARMA",
+      "hint": "师门传承，镇派神通",
+      "triggerCondition": "完成宗门三次任务"
+    }
+  ],
+  "storyTone": "先苦后甜，逆境翻盘"
+}</pre>
+
+<h2 id="s3-4">3.4 Agent2 -- 节点生成 Agent（生成层）</h2>
+
+<h4>职责</h4>
+<ul>
+  <li>滚动生成 2~3 个预备节点</li>
+  <li>根据境界/节点频率表决定节点类型</li>
+  <li>输出结构化状态变更指令（由后端执行）</li>
+</ul>
+
+<h4>输入上下文</h4>
+<pre>{
+  "worldOutline": { ... },           // Agent3 摘要
+  "storyOutline": { ... },           // Agent1 摘要
+  "gameState": {
+    "baseAttrs": { "jing": 90, "qi": 120, "shen": 80 },
+    "character": { "realm": "金丹", "exp": 4200, "age": 180, "maxAge": 400 },
+    "inventory": [...],
+    "npc_relations": { ... },
+    "karma_debts": [...],
+    "world_flags": [...]
+  },
+  "recentNodes": [...],              // 最近 5 个节点摘要
+  "realmNodeConfig": {               // 当前境界的节点频率配置
+    "timeUnit": "月",
+    "nodeTypes": { "event": 50, "battle": 20, "wonder": 15, "karma": 10, "faction": 5 }
+  },
+  "positiveRatio": 0.75              // 正负向比例
+}</pre>
+
+<h4>输出 Schema</h4>
+<pre>{
+  "nodes": [
+    {
+      "type": "EVENT",
+      "subType": "财·交易",
+      "text": "云岚坊市东侧，一名衣着华贵的修士正在拍卖一柄品相不凡的法器...",
+      "choices": [
+        { "text": "出价竞拍", "hint": "需灵石800，品质未知", "expectedEffects": { "action": "spend_resource", "cost": 800 } },
+        { "text": "私下交涉", "hint": "可能以低价获得", "expectedEffects": { "action": "negotiate", "risk": 0.3 } },
+        { "text": "旁观等待", "hint": "错过此物但保留资源", "expectedEffects": { "action": "pass" } }
+      ],
+      "stateChanges": {
+        "baseAttrDelta": { "qi": 0, "jing": 0, "shen": 0 },
+        "expGain": 100,
+        "ageConsume": 30,
+        "inventoryAdd": [],
+        "npcRelChange": {}
+      }
+    }
+  ]
+}</pre>
+
+<h2 id="s3-5">3.5 Prompt Engineering 策略</h2>
+
+<div class="card">
+  <h3 style="margin-top:0;">分层 Prompt 架构</h3>
+  <table class="tb">
+    <thead><tr><th>层级</th><th>名称</th><th>内容</th><th>token 预算</th></tr></thead>
+    <tbody>
+      <tr><td>L1</td><td>System Prompt</td><td>AI 身份 + 全局规则 + JSON Schema</td><td>~2000</td></tr>
+      <tr><td>L2</td><td>Context Prompt</td><td>世界大纲摘要 + 故事脉络摘要 + 结构化状态</td><td>~1500</td></tr>
+      <tr><td>L3</td><td>Task Prompt</td><td>当前任务指令 + 约束条件 + 输出格式</td><td>~800</td></tr>
+      <tr><td>L4</td><td>History</td><td>最近 5 节点摘要 + 玩家上次选择</td><td>~500</td></tr>
+    </tbody>
+  </table>
+  <p>总计单次调用 token 消耗约 <strong>4800 input + 1500 output</strong>，单次成本约 <strong>0.003 元</strong>（DeepSeek 定价）。</p>
+</div>
+
+<div class="card">
+  <h3 style="margin-top:0;">摘要压缩策略</h3>
+  <ul>
+    <li><strong>触发时机</strong>：每 5 个节点生成一次摘要，由 Agent 独立调用完成</li>
+    <li><strong>摘要格式</strong>：200-300 字，包含关键转折、NPC 关系变化、获得的重要物品</li>
+    <li><strong>保留原文</strong>：最近 2 个节点的原始文本始终保留在上下文中</li>
+    <li><strong>版本控制</strong>：摘要带版本号，新摘要生成后替换旧摘要</li>
+  </ul>
+</div>
+
+<h2 id="s3-6">3.6 LangChain 集成方案</h2>
+
+<pre>// agent/providers/langchain.provider.ts
+import { ChatOpenAI } from '@langchain/openai';
+import { SystemMessage, HumanMessage } from '@langchain/core/messages';
+import { StructuredOutputParser } from '@langchain/core/output_parsers';
+
+export class LangChainProvider {
+  private llm: ChatOpenAI;
+
+  constructor(config: AIConfig) {
+    this.llm = new ChatOpenAI({
+      model: config.model,               // deepseek-chat
+      apiKey: config.apiKey,
+      configuration: { baseURL: config.baseURL },
+      temperature: 0.85,
+      maxTokens: 2000,
+      modelKwargs: { response_format: { type: 'json_object' } },
+    });
+  }
+
+  async invoke(systemPrompt: string, userPrompt: string): Promise&lt;string&gt; {
+    const result = await this.llm.invoke([
+      new SystemMessage(systemPrompt),
+      new HumanMessage(userPrompt),
+    ]);
+    return result.content as string;
+  }
+
+  // 带重试的 JSON 解析调用
+  async invokeWithRetry&lt;T&gt;(
+    systemPrompt: string,
+    userPrompt: string,
+    parser: StructuredOutputParser&lt;T&gt;,
+    maxRetries = 2,
+  ): Promise&lt;T&gt; {
+    for (let i = 0; i &lt;= maxRetries; i++) {
+      try {
+        const raw = await this.invoke(systemPrompt, userPrompt);
+        return parser.parse(raw);
+      } catch (e) {
+        if (i === maxRetries) throw e;
+        // 重试时追加"严格JSON"提示
+        userPrompt += '\n\n[系统提示：上次输出格式错误，请严格返回合法JSON]';
+      }
+    }
+    throw new Error('Unreachable');
+  }
+}</pre>
+
+<hr class="hr">
+
+<!-- ============================================================ -->
+<h1 id="s4">四、后端模块设计</h1>
+
+<h2 id="s4-1">4.1 NestJS 模块划分</h2>
+<table class="tb">
+  <thead><tr><th>模块</th><th>职责</th><th>对外接口数</th><th>依赖</th></tr></thead>
+  <tbody>
+    <tr><td><code>AuthModule</code></td><td>双端登录、JWT、Token 刷新</td><td>3</td><td>Redis, UserModule</td></tr>
+    <tr><td><code>UserModule</code></td><td>用户资料、记录、存档管理</td><td>6</td><td>DB</td></tr>
+    <tr><td><code>GameModule</code></td><td>核心游戏逻辑（创角/节点/战斗/突破/飞升/结局）</td><td>20</td><td>AgentModule, Redis, DB</td></tr>
+    <tr><td><code>AgentModule</code></td><td>三 Agent 管理、Prompt 构建、LLM 调用、校验</td><td>内部</td><td>LangChain, Redis</td></tr>
+    <tr><td><code>StreamModule</code></td><td>SSE 连接管理、心跳、多端互斥</td><td>2 (SSE)</td><td>Redis, GameModule</td></tr>
+  </tbody>
+</table>
+
+<h2 id="s4-2">4.2 鉴权模块</h2>
+<div class="card">
+  <h4>流程</h4>
+  <ol>
+    <li>前端调用 <code>wx.login()</code> / <code>my.getAuthCode()</code> 获取临时凭证</li>
+    <li>后端用凭证换取 <code>openid</code>（微信）/ <code>user_id</code>（支付宝）</li>
+    <li>根据 openid 查找或创建用户记录</li>
+    <li>签发 JWT（access_token 2h + refresh_token 7d）</li>
+    <li>后续请求通过 <code>AuthGuard</code> 校验 JWT</li>
+  </ol>
+
+  <h4>安全设计</h4>
+  <ul>
+    <li>JWT 密钥存环境变量，生产环境使用 RS256</li>
+    <li>Refresh Token 单次使用，存 Redis 做轮转</li>
+    <li>Token 黑名单机制（用户主动退出时作废旧 Token）</li>
+  </ul>
+</div>
+
+<h2 id="s4-3">4.3 游戏核心模块</h2>
+
+<h3>4.3.1 角色创建服务 (CharacterService)</h3>
+<pre>// 属性随机生成算法
+function rollCharacter(): CharacterRoll {
+  const roll = (min, max) => Math.floor(Math.random() * (max - min + 1)) + min;
+  const jing = roll(30, 80);
+  const qi = roll(30, 80);
+  const shen = roll(30, 80);
+  const talent = roll(1, 100);    // 资质
+  const wisdom = roll(1, 100);    // 悟性
+  const luck = roll(1, 100);      // 气运
+  const maxAge = 80 + qi * 2;     // 初始寿元
+
+  return { name: generateName(), jing, qi, shen, talent, wisdom, luck, maxAge };
+}
+// 重投限制：Redis incr("roll:{userId}"), TTL 24h, max 3</pre>
+
+<h3>4.3.2 节点服务 (NodeService)</h3>
+<ul>
+  <li><strong>节点类型选择</strong>：根据当前境界查表获取概率分布，加权随机选取</li>
+  <li><strong>预生成</strong>：每个选择点为每个选项预生成后续节点，存入 <code>node</code> 表（<code>is_pregenerated=1</code>）</li>
+  <li><strong>分支管理</strong>：同一决策点的预生成节点共享 <code>branch_group_id</code>，玩家选择后标记主线</li>
+</ul>
+
+<h3>4.3.3 战斗服务 (BattleService)</h3>
+<pre>// 战斗概率模型
+function calculateBattleResult(player: DerivedStats, enemy: EnemyStats, luck: number): BattleResult {
+  const powerRatio = calculatePowerScore(player) / calculatePowerScore(enemy);
+  const luckBonus = (luck - 50) * 0.005;  // -0.25 ~ +0.25
+  const random = Math.random() * 0.3;     // 随机因子 0~0.3
+
+  const winScore = powerRatio + luckBonus + random;
+
+  if (winScore >= 1.6) return 'GREAT_WIN';     // 大胜
+  if (winScore >= 1.2) return 'WIN';           // 小胜
+  if (winScore >= 0.8) return 'DRAW';          // 平局
+  if (winScore >= 0.5) return 'RETREAT';       // 败退
+  return 'DEATH';                              // 重伤/战死
+}</pre>
+
+<h2 id="s4-4">4.4 SSE 实时推送模块</h2>
+
+<div class="card">
+  <h4>SSE 事件类型</h4>
+  <table class="tb">
+    <thead><tr><th>event</th><th>data 格式</th><th>触发时机</th></tr></thead>
+    <tbody>
+      <tr><td><code>log</code></td><td><code>{ text, timestamp }</code></td><td>常规修炼日志推送</td></tr>
+      <tr><td><code>node</code></td><td><code>{ node: GameNode }</code></td><td>节点触发，等待玩家选择</td></tr>
+      <tr><td><code>status</code></td><td><code>{ character, changes }</code></td><td>属性/境界变更推送</td></tr>
+      <tr><td><code>breakthrough</code></td><td><code>{ oldRealm, newRealm }</code></td><td>境界突破成功</td></tr>
+      <tr><td><code>ending</code></td><td><code>{ type, narrative }</code></td><td>触发结局</td></tr>
+      <tr><td><code>heartbeat</code></td><td><code>{ ts }</code></td><td>30s 心跳保活</td></tr>
+      <tr><td><code>kicked</code></td><td><code>{ reason }</code></td><td>被其他设备顶替</td></tr>
+    </tbody>
+  </table>
+
+  <h4>连接管理</h4>
+  <ul>
+    <li>Redis 存储活跃连接映射：<code>sse:{saveId} → connectionId</code></li>
+    <li>新连接建立时检查是否已有连接，有则发送 <code>kicked</code> 事件后断开旧连接</li>
+    <li>心跳 30s/次，客户端断开后 60s 容忍窗口</li>
+    <li>超时后冻结游戏时间线，重连后从断点继续</li>
+  </ul>
+</div>
+
+<h2 id="s4-5">4.5 状态管理与一致性</h2>
+
+<div class="card">
+  <h4>结构化状态 (game_state.state JSON)</h4>
+  <pre>{
+  "baseAttrs": { "jing": 90, "qi": 120, "shen": 80 },
+  "derived": { "hp": 950, "mp": 1020, "sp": 520 },
+  "character": { "realm": "金丹", "exp": 4200, "age": 180, "maxAge": 400 },
+  "inventory": ["青竹剑（法器）", "固元丹x3"],
+  "skills": ["御剑术", "火球咒"],
+  "npc_relations": {
+    "师父李玄真": { "status": "在世", "affinity": 85 },
+    "宿敌王霸天": { "status": "在世", "affinity": -60 }
+  },
+  "karma_debts": [
+    { "event": "杀死落败的陈刚", "triggered": false, "delay_nodes": 5, "remaining": 3 }
+  ],
+  "world_flags": ["已开启东海秘境", "魔道入侵已开始"],
+  "space_channels": []
+}</pre>
+
+  <h4>一致性三重保障</h4>
+  <ol>
+    <li><strong>Agent 输出约束</strong>：Agent 返回结构化 JSON 指令，后端逻辑层执行实际状态变更</li>
+    <li><strong>Agent3 校验</strong>：所有生成内容经 Agent3 校验通过后才入库</li>
+    <li><strong>摘要压缩</strong>：每 5 节点生成摘要，避免上下文爆炸导致的遗忘/矛盾</li>
+  </ol>
+</div>
+
+<hr class="hr">
+
+<!-- ============================================================ -->
+<h1 id="s5">五、数据库设计</h1>
+
+<h2 id="s5-1">5.1 ER 模型与表结构</h2>
+
+<div class="arch">
+user ──1:N── save ──1:1── role
+                  ──1:1── game_state
+                  ──1:N── world
+                  ──1:N── npc
+                  ──1:N── node
+                  ──1:N── prop
+                  ──1:N── space_channel
+</div>
+
+<h3>核心表 DDL</h3>
+<pre>-- 用户表
+CREATE TABLE `user` (
+  `id` BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+  `wx_openid` VARCHAR(64) DEFAULT NULL UNIQUE,
+  `ali_user_id` VARCHAR(64) DEFAULT NULL UNIQUE,
+  `nickname` VARCHAR(32) NOT NULL DEFAULT '',
+  `avatar` VARCHAR(256) DEFAULT NULL,
+  `created_at` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  `updated_at` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+) ENGINE=InnoDB;
+
+-- 存档表
+CREATE TABLE `save` (
+  `id` BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+  `user_id` BIGINT UNSIGNED NOT NULL,
+  `name` VARCHAR(32) NOT NULL COMMENT '角色名',
+  `status` ENUM('active','ended') NOT NULL DEFAULT 'active',
+  `ending_type` VARCHAR(16) DEFAULT NULL,
+  `created_at` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  `updated_at` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  INDEX `idx_user_status` (`user_id`, `status`)
+) ENGINE=InnoDB;
+
+-- 角色表
+CREATE TABLE `role` (
+  `id` BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+  `save_id` BIGINT UNSIGNED NOT NULL UNIQUE,
+  `name` VARCHAR(32) NOT NULL,
+  `jing` INT NOT NULL DEFAULT 50,
+  `qi` INT NOT NULL DEFAULT 50,
+  `shen` INT NOT NULL DEFAULT 50,
+  `talent` INT NOT NULL DEFAULT 50,
+  `wisdom` INT NOT NULL DEFAULT 50,
+  `luck` INT NOT NULL DEFAULT 50,
+  `realm` VARCHAR(16) NOT NULL DEFAULT '练气',
+  `exp` INT NOT NULL DEFAULT 0,
+  `age` INT NOT NULL DEFAULT 16,
+  `max_age` INT NOT NULL DEFAULT 100
+) ENGINE=InnoDB;
+
+-- 世界表
+CREATE TABLE `world` (
+  `id` BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+  `save_id` BIGINT UNSIGNED NOT NULL,
+  `name` VARCHAR(64) NOT NULL,
+  `world_type` VARCHAR(16) NOT NULL DEFAULT '凡界',
+  `history` TEXT,
+  `factions` JSON,
+  `rules` JSON,
+  `status` ENUM('current','past') NOT NULL DEFAULT 'current',
+  `seq` INT NOT NULL DEFAULT 1,
+  INDEX `idx_save_status` (`save_id`, `status`)
+) ENGINE=InnoDB;
+
+-- 节点表（核心，量最大）
+CREATE TABLE `node` (
+  `id` BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+  `save_id` BIGINT UNSIGNED NOT NULL,
+  `realm` VARCHAR(16) NOT NULL,
+  `node_type` VARCHAR(16) NOT NULL,
+  `sub_type` VARCHAR(32) DEFAULT NULL,
+  `text` TEXT NOT NULL,
+  `choices` JSON DEFAULT NULL,
+  `chosen_index` TINYINT DEFAULT NULL,
+  `state_changes` JSON DEFAULT NULL,
+  `is_pregenerated` TINYINT(1) NOT NULL DEFAULT 0,
+  `branch_group_id` VARCHAR(36) DEFAULT NULL,
+  `parent_node_id` BIGINT UNSIGNED DEFAULT NULL,
+  `created_at` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  INDEX `idx_save_created` (`save_id`, `created_at`),
+  INDEX `idx_branch_group` (`branch_group_id`)
+) ENGINE=InnoDB;
+
+-- 游戏状态表
+CREATE TABLE `game_state` (
+  `id` BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+  `save_id` BIGINT UNSIGNED NOT NULL UNIQUE,
+  `state` JSON NOT NULL,
+  `summary` TEXT DEFAULT NULL,
+  `summary_version` INT NOT NULL DEFAULT 0,
+  `updated_at` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+) ENGINE=InnoDB;
+
+-- NPC表
+CREATE TABLE `npc` (
+  `id` BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+  `save_id` BIGINT UNSIGNED NOT NULL,
+  `name` VARCHAR(32) NOT NULL,
+  `type` VARCHAR(16) NOT NULL,
+  `personality` VARCHAR(128) DEFAULT NULL,
+  `affinity` INT NOT NULL DEFAULT 0,
+  `status` VARCHAR(16) NOT NULL DEFAULT '在世',
+  `metadata` JSON DEFAULT NULL,
+  INDEX `idx_save` (`save_id`)
+) ENGINE=InnoDB;
+
+-- 法宝/神通表
+CREATE TABLE `prop` (
+  `id` BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+  `save_id` BIGINT UNSIGNED NOT NULL,
+  `name` VARCHAR(64) NOT NULL,
+  `prop_type` ENUM('weapon','armor','consumable','skill') NOT NULL,
+  `level` TINYINT NOT NULL DEFAULT 1,
+  `affixes` JSON DEFAULT NULL,
+  `stat_bonus` JSON DEFAULT NULL,
+  `obtained_node_id` BIGINT UNSIGNED DEFAULT NULL,
+  `equipped` TINYINT(1) NOT NULL DEFAULT 0,
+  INDEX `idx_save_type` (`save_id`, `prop_type`)
+) ENGINE=InnoDB;
+
+-- 空间通道表
+CREATE TABLE `space_channel` (
+  `id` BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+  `save_id` BIGINT UNSIGNED NOT NULL,
+  `quality` ENUM('high','mid','low') NOT NULL,
+  `danger` TINYINT NOT NULL DEFAULT 50,
+  `target_world_hint` VARCHAR(64) DEFAULT NULL,
+  `discovered_node_id` BIGINT UNSIGNED DEFAULT NULL,
+  `used` TINYINT(1) NOT NULL DEFAULT 0,
+  `created_at` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  INDEX `idx_save_used` (`save_id`, `used`)
+) ENGINE=InnoDB;</pre>
+
+<h2 id="s5-2">5.2 JSON 字段设计</h2>
+<div class="note note-info">
+  <strong>设计原则</strong>：高频查询字段独立为列；低频、结构多变的数据使用 JSON 字段。<br>
+  - <code>game_state.state</code>：最核心的 JSON 字段，存储完整结构化状态，避免频繁加列<br>
+  - <code>node.choices</code>：选项数组，结构固定但数量可变（2-3个）<br>
+  - <code>node.state_changes</code>：每个节点产生的状态变更指令<br>
+  - <code>world.factions / rules</code>：世界设定，读多写少
+</div>
+
+<h2 id="s5-3">5.3 索引策略</h2>
+<table class="tb">
+  <thead><tr><th>表</th><th>索引</th><th>场景</th></tr></thead>
+  <tbody>
+    <tr><td>save</td><td><code>idx_user_status</code></td><td>按用户查活跃/已结束存档</td></tr>
+    <tr><td>node</td><td><code>idx_save_created</code></td><td>按存档时间序查节点历史</td></tr>
+    <tr><td>node</td><td><code>idx_branch_group</code></td><td>查预生成分支节点组</td></tr>
+    <tr><td>game_state</td><td><code>UNIQUE save_id</code></td><td>一存档一状态，快速定位</td></tr>
+    <tr><td>user</td><td><code>UNIQUE wx_openid / ali_user_id</code></td><td>登录查用户</td></tr>
+  </tbody>
+</table>
+
+<hr class="hr">
+
+<!-- ============================================================ -->
+<h1 id="s6">六、前端设计</h1>
+
+<h2 id="s6-1">6.1 Taro + React 组件架构</h2>
+
+<div class="card">
+  <h4>页面结构</h4>
+  <table class="tb">
+    <thead><tr><th>页面</th><th>路由</th><th>功能</th></tr></thead>
+    <tbody>
+      <tr><td>首页</td><td><code>/pages/index/index</code></td><td>登录引导 + 快速开始/继续入口</td></tr>
+      <tr><td>游戏主界面</td><td><code>/pages/game/index</code></td><td>属性面板 + 叙事流 + 节点交互</td></tr>
+      <tr><td>创角页</td><td><code>/pages/game/create</code></td><td>属性预览 + 确认/重投</td></tr>
+      <tr><td>存档列表</td><td><code>/pages/saves/index</code></td><td>多存档管理</td></tr>
+      <tr><td>游戏记录</td><td><code>/pages/records/index</code></td><td>历史游戏列表</td></tr>
+      <tr><td>游戏详情</td><td><code>/pages/records/detail</code></td><td>完整故事回顾</td></tr>
+      <tr><td>个人中心</td><td><code>/pages/profile/index</code></td><td>修改昵称等</td></tr>
+    </tbody>
+  </table>
+</div>
+
+<h3>核心组件树（游戏主界面）</h3>
+<div class="arch">
+GamePage
+├── AttributePanel              # 顶部属性面板
+│   ├── RealmBadge             # 境界标记
+│   ├── StatsGrid              # 精/气/神 + 派生值
+│   │   ├── StatBar            # 单个属性条
+│   │   └── DeltaIndicator     # +/- 浮动动画
+│   ├── LifespanBar            # 寿元进度条
+│   └── AchievementRow         # 成就标签行
+│
+├── NarrativeFlow               # 中部叙事流
+│   ├── LogEntry               # 修炼日志条目
+│   ├── NodeEntry              # 节点叙事（高亮）
+│   └── TypewriterText         # 打字机效果组件
+│
+├── InteractionArea             # 底部交互区
+│   ├── ChoiceGroup            # 节点选项组
+│   │   └── ChoiceButton       # 单个选项按钮
+│   ├── BattlePanel            # 战斗结算展示
+│   ├── BreakthroughOverlay    # 突破动画覆盖
+│   └── RetreatButton          # 闭关按钮
+│
+└── EndingOverlay               # 结局全屏覆盖
+    ├── EndingNarrative
+    ├── StatsReview
+    └── RestartButton
+</div>
+
+<h2 id="s6-2">6.2 状态管理方案</h2>
+
+<pre>// store/useGameStore.ts  (Zustand)
+interface GameStore {
+  // 状态
+  phase: 'idle' | 'creating' | 'loading' | 'playing' | 'ended';
+  saveId: number | null;
+  character: CharacterData | null;
+  gameState: StructuredState | null;
+  narrativeHistory: NarrativeEntry[];
+  currentNode: GameNode | null;
+  sseStatus: 'disconnected' | 'connected' | 'reconnecting';
+
+  // 动作
+  startNewGame: () => Promise&lt;void&gt;;
+  rollCharacter: () => Promise&lt;CharacterRoll&gt;;
+  confirmCharacter: (roll: CharacterRoll) => Promise&lt;void&gt;;
+  resumeGame: (saveId: number) => Promise&lt;void&gt;;
+  makeChoice: (nodeId: string, choiceIndex: number) => Promise&lt;void&gt;;
+  triggerRetreat: (duration: number) => Promise&lt;void&gt;;
+  connectSSE: (saveId: number) => void;
+  disconnectSSE: () => void;
+}</pre>
+
+<h2 id="s6-3">6.3 页面路由与交互流程</h2>
+
+<div class="flow">
+  <span class="flow-step">首页</span><span class="flow-arrow">→</span>
+  <span class="flow-step hl">创角</span><span class="flow-arrow">→</span>
+  <span class="flow-step">世界生成</span><span class="flow-arrow">→</span>
+  <span class="flow-step hl">游戏主界面</span><span class="flow-arrow">→</span>
+  <span class="flow-step">SSE 连接</span><span class="flow-arrow">→</span>
+  <span class="flow-step hl">修炼循环</span><span class="flow-arrow">→</span>
+  <span class="flow-step">结局</span>
+</div>
+
+<h2 id="s6-4">6.4 视觉设计规范</h2>
+<div class="card">
+  <table class="tb">
+    <thead><tr><th>元素</th><th>规范</th></tr></thead>
+    <tbody>
+      <tr><td>底色</td><td>深色系 <code>#0e1019</code>，模拟夜空/洞府氛围</td></tr>
+      <tr><td>纹理</td><td>叠加古籍宣纸纹理（opacity 0.03），增加质感</td></tr>
+      <tr><td>字体</td><td>正文：霞鹜文楷 / 系统衬线体；数值：等宽字体</td></tr>
+      <tr><td>文字色</td><td>主文 <code>#d8dae5</code>，辅助 <code>#7c809a</code></td></tr>
+      <tr><td>强调色</td><td>紫 <code>#7b6cf6</code>（境界）、蓝 <code>#5b9cf5</code>（选项）、绿 <code>#4ecb8d</code>（正面）、红 <code>#ef5b5b</code>（负面）</td></tr>
+      <tr><td>动效</td><td>打字机逐字显示（40ms/字）；属性变化浮动动画；境界突破发光脉冲</td></tr>
+      <tr><td>交互</td><td>选项为蓝色高亮卡片，点击后渐隐；非交互时全自动流式滚动</td></tr>
+    </tbody>
+  </table>
+</div>
+
+<hr class="hr">
+
+<!-- ============================================================ -->
+<h1 id="s7">七、核心流程时序设计</h1>
+
+<h2 id="s7-1">7.1 新游戏完整时序</h2>
+<div class="arch">
+Client                   Server                    Agent3         Agent1         Agent2
+  │                        │                        │              │              │
+  │── POST /roll-character ─▶│                        │              │              │
+  │◀── { characterRoll } ───│                        │              │              │
+  │                        │                        │              │              │
+  │── POST /confirm ────────▶│                        │              │              │
+  │                        │── generate world ──────▶│              │              │
+  │                        │◀── worldOutline ────────│              │              │
+  │                        │                        │              │              │
+  │                        │── generate story ──────────────────────▶│              │
+  │                        │◀── storyOutline + npcs ────────────────│              │
+  │                        │                        │              │              │
+  │                        │── validate(story) ─────▶│              │              │
+  │                        │◀── { valid: true } ────│              │              │
+  │                        │                        │              │              │
+  │                        │── generate guide nodes ────────────────────────────────▶│
+  │                        │◀── guideNodes[2~3] ────────────────────────────────────│
+  │                        │                        │              │              │
+  │◀── SSE: log(开篇) ─────│                        │              │              │
+  │◀── SSE: node(引导1) ───│                        │              │              │
+  │                        │                        │              │              │
+</div>
+
+<h2 id="s7-2">7.2 修炼循环时序</h2>
+<div class="arch">
+Client                   Server                    Agent2
+  │                        │                        │
+  │◀── SSE: log(修炼中) ───│                        │
+  │◀── SSE: status(exp+) ──│                        │
+  │        ...30s...       │                        │
+  │◀── SSE: log(修炼中) ───│                        │
+  │◀── SSE: heartbeat ─────│                        │
+  │        ...到达节点触发点...                       │
+  │                        │── generate nodes ──────▶│
+  │                        │◀── nextNodes[2~3] ─────│
+  │                        │                        │
+  │◀── SSE: node(选择) ────│                        │
+  │                        │                        │
+  │── POST /choose ────────▶│                        │
+  │                        │── 计算状态变更          │
+  │                        │── 预生成分支            │
+  │◀── { result } ─────────│                        │
+  │◀── SSE: status ────────│                        │
+  │                        │                        │
+</div>
+
+<h2 id="s7-3">7.3 节点选择与战斗时序</h2>
+<div class="arch">
+Client                   Server                    Agent2
+  │                        │                        │
+  │◀── SSE: node(BATTLE) ──│                        │
+  │                        │                        │
+  │── POST /choose ────────▶│  (选择行动：迎战)       │
+  │◀── { narrative: 过渡 } ─│                        │
+  │                        │                        │
+  │── POST /battle-resolve ─▶│                        │
+  │                        │── 概率模型计算           │
+  │                        │── 生成战斗描述 ─────────▶│
+  │                        │◀── 战斗叙事 ────────────│
+  │◀── { result, narrative, │                        │
+  │      stateChanges,     │                        │
+  │      drops[] }  ───────│                        │
+  │                        │                        │
+</div>
+
+<h2 id="s7-4">7.4 境界突破与飞升时序</h2>
+<div class="arch">
+Client                   Server                    Agent3
+  │                        │                        │
+  │◀── SSE: status(exp=MAX)─│                        │
+  │                        │── 检测突破条件           │
+  │                        │                        │
+  │── POST /breakthrough ──▶│                        │
+  │                        │── 是否需要天劫？         │
+  │◀── { needTribulation } ─│                        │
+  │                        │                        │
+  │── POST /tribulation ───▶│                        │
+  │                        │── 概率判定               │
+  │◀── { success, newRealm }│                        │
+  │                        │                        │
+  │  [若达到承载上限巅峰]    │                        │
+  │── POST /ascend-natural ─▶│                        │
+  │                        │── 飞升判定               │
+  │                        │── generate new world ──▶│
+  │                        │◀── newWorldOutline ─────│
+  │◀── { result, worldId } ─│                        │
+  │                        │                        │
+</div>
+
+<hr class="hr">
+
+<!-- ============================================================ -->
+<h1 id="s8">八、容错与兜底策略</h1>
+
+<div class="card">
+  <table class="tb">
+    <thead><tr><th>场景</th><th>策略</th><th>实现方式</th></tr></thead>
+    <tbody>
+      <tr>
+        <td>Agent JSON 解析失败</td>
+        <td>自动重试 2 次（附带严格 JSON 提示）</td>
+        <td><code>LangChainProvider.invokeWithRetry()</code></td>
+      </tr>
+      <tr>
+        <td>Agent 重试仍失败</td>
+        <td>降级为 Mock 模板（按境界返回保底节点）</td>
+        <td><code>MockProvider.getFallback(realm)</code></td>
+      </tr>
+      <tr>
+        <td>Agent3 校验失败</td>
+        <td>重新生成 2 次，仍失败放行并标记"待校验"</td>
+        <td><code>ContentValidator.validateWithRetry()</code></td>
+      </tr>
+      <tr>
+        <td>SSE 断开</td>
+        <td>60s 容忍窗口，超时冻结时间线</td>
+        <td>Redis TTL + 定时检查</td>
+      </tr>
+      <tr>
+        <td>多端同时连接</td>
+        <td>后开者顶替先开者</td>
+        <td>Redis <code>sse:{saveId}</code> 互斥锁</td>
+      </tr>
+      <tr>
+        <td>请求频控</td>
+        <td>写接口 1s 1次 / userId+saveId</td>
+        <td>Redis sliding window</td>
+      </tr>
+      <tr>
+        <td>重投滥用</td>
+        <td>24h 内最多 3 次</td>
+        <td>Redis <code>roll:{userId}</code> incr + TTL</td>
+      </tr>
+      <tr>
+        <td>状态不一致</td>
+        <td>后端为唯一状态源，Agent 只提供指令不直接修改</td>
+        <td>所有 stateChanges 由后端验证后执行</td>
+      </tr>
+      <tr>
+        <td>LLM 超时</td>
+        <td>设置 30s 请求超时，超时返回 Mock 兜底</td>
+        <td>LangChain timeout 配置 + catch</td>
+      </tr>
+    </tbody>
+  </table>
+</div>
+
+<hr class="hr">
+
+<!-- ============================================================ -->
+<h1 id="s9">九、部署架构</h1>
+
+<div class="arch">
+┌─────────────────────────────────────────────────────────────┐
+│                    Docker Compose                            │
+├─────────────────────────────────────────────────────────────┤
+│                                                             │
+│  ┌─────────────┐  ┌─────────────┐  ┌─────────────────┐    │
+│  │  NestJS     │  │  MySQL 8.0  │  │  Redis 7        │    │
+│  │  Port: 9999 │  │  Port: 3306 │  │  Port: 6379     │    │
+│  │  Node 18    │  │  data: vol  │  │  data: vol      │    │
+│  └──────┬──────┘  └─────────────┘  └─────────────────┘    │
+│         │                                                   │
+│         │ HTTPS (Nginx Reverse Proxy)                       │
+│  ┌──────▼──────────────────────────────────────────┐       │
+│  │  Nginx                                          │       │
+│  │  Port: 80/443                                   │       │
+│  │  SSL + Gzip + Rate Limit                        │       │
+│  └─────────────────────────────────────────────────┘       │
+│                                                             │
+└─────────────────────────────────────────────────────────────┘
+         ▲
+         │ HTTPS
+    ┌────┴────┐
+    │  CDN    │  (小程序静态资源可选)
+    └─────────┘
+</div>
+
+<div class="card">
+  <h4>环境变量配置 (.env)</h4>
+  <pre># Server
+PORT=9999
+NODE_ENV=production
+
+# Database
+DB_HOST=mysql
+DB_PORT=3306
+DB_USER=xiuxian
+DB_PASSWORD=***
+DB_NAME=xiuxian_game
+
+# Redis
+REDIS_HOST=redis
+REDIS_PORT=6379
+REDIS_PASSWORD=***
+
+# AI
+AI_PROVIDER=deepseek
+DEEPSEEK_API_KEY=sk-***
+DEEPSEEK_BASE_URL=https://api.deepseek.com
+DEEPSEEK_MODEL=deepseek-chat
+
+# Auth
+JWT_SECRET=***
+JWT_EXPIRES_IN=2h
+JWT_REFRESH_EXPIRES_IN=7d
+WX_APP_ID=***
+WX_APP_SECRET=***
+ALI_APP_ID=***
+ALI_PRIVATE_KEY=***</pre>
+</div>
+
+<hr class="hr">
+
+<!-- ============================================================ -->
+<h1 id="s10">十、开发路线图与里程碑</h1>
+
+<table class="tb">
+  <thead><tr><th>阶段</th><th>目标</th><th>交付物</th><th>验收标准</th></tr></thead>
+  <tbody>
+    <tr>
+      <td><strong>M1: 基础框架</strong></td>
+      <td>搭建正式版工程骨架</td>
+      <td>Taro 前端 + NestJS 后端 + MySQL + Redis + Docker</td>
+      <td>双端小程序空壳运行；后端健康检查通过；CI/CD 流水线就绪</td>
+    </tr>
+    <tr>
+      <td><strong>M2: 鉴权 + 用户</strong></td>
+      <td>双端登录 + 个人管理</td>
+      <td>AuthModule + UserModule 全部接口</td>
+      <td>微信/支付宝登录通过；Token 刷新正常；存档 CRUD 完成</td>
+    </tr>
+    <tr>
+      <td><strong>M3: 游戏核心（Mock）</strong></td>
+      <td>跑通完整游戏循环（Mock AI）</td>
+      <td>创角 → 修炼 → 节点 → 选择 → 突破 → 结局 全流程</td>
+      <td>SSE 推送正常；属性计算准确；Mock 数据完整循环</td>
+    </tr>
+    <tr>
+      <td><strong>M4: Agent 集成</strong></td>
+      <td>三 Agent 替换 Mock</td>
+      <td>Agent3/1/2 完整实现 + Prompt Engineering + 校验</td>
+      <td>AI 生成内容一致性 &ge;90%；JSON 解析成功率 &ge;95%</td>
+    </tr>
+    <tr>
+      <td><strong>M5: 战斗 + 境界 + 飞升</strong></td>
+      <td>完整战力系统</td>
+      <td>概率模型 + 天劫 + 双路径飞升 + 世界迁移</td>
+      <td>战斗五档分布合理；飞升流程通畅；新世界生成正常</td>
+    </tr>
+    <tr>
+      <td><strong>M6: 预生成 + 流式</strong></td>
+      <td>体验优化</td>
+      <td>节点预生成缓存 + 叙事流式输出 + 分支回溯</td>
+      <td>选择后 &lt;200ms 展示下一段；预生成命中率 &ge;80%</td>
+    </tr>
+    <tr>
+      <td><strong>M7: 双端适配 + 上线</strong></td>
+      <td>生产环境部署</td>
+      <td>微信审核 + 支付宝审核 + 线上灰度</td>
+      <td>双端功能一致；P0 缺陷清零；性能达标（API &lt;500ms P99）</td>
+    </tr>
+  </tbody>
+</table>
+
+<div class="note note-ok">
+  <strong>Demo 复用价值</strong>：demov1.0 的 LangChain 集成方案、Prompt 三层架构、属性变化模型、境界突破逻辑可直接迁移至正式版 Agent2 节点生成器中，预计节省 M4 阶段约 30% 工作量。
+</div>
+
+<hr class="hr">
+
+<p style="text-align:center;color:var(--dim);font-size:13px;margin-top:48px;">
+  《文字修仙》技术设计文档 v1.0 &middot; 2026-05 &middot; 基于 PRD v1.1
+</p>
+
+</div>
+</body>
+</html>
